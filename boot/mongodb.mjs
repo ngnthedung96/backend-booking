@@ -11,6 +11,7 @@ mongoose.set("useCreateIndex", true);
 let mongoConnect = {};
 const initializeMongoDb = () => {
   try {
+    console.log(process.env.CONNECT_STRING, 123123);
     mongoConnect = mongoose.createConnection(process.env.CONNECT_STRING, {
       useUnifiedTopology: true,
       useNewUrlParser: true,
