@@ -1,0 +1,49 @@
+image: docker:20
+services:
+    - docker:dind
+
+before_script:
+  - apk update && apk add openssh-client && apk add curl
+
+stages:
+  - publish
+  - deploy
+
+# Config cache a
+cache:
+  paths:
+    - node_modules/
+
+variables:
+  DOCKER_HOST: "tcp://docker:2375"
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: "overlay2"
+  TAG_LATEST: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
+  TAG_COMMIT: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+
+build:
+  stage: publish
+  script:
+    - cat $ENV > .env  # Use cat to preserve newlines
+    - cat .env           # Display the content (optional)
+    - docker build -t $TAG_COMMIT -t $TAG_LATEST .
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker push $TAG_COMMIT
+    - docker push $TAG_LATEST
+    
+    - curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d "chat_id=$TELEGRAM_CHAT_ID" -d "text=The pipeline has completed $CI_PIPELINE_URL !!!"
+
+trienkhai:
+  image: alpine:latest
+  stage: deploy
+  script:
+    - apk update && apk add openssh-client && apk add curl
+    - mkdir ~/.ssh && chmod 0700 ~/.ssh
+    - eval $(ssh-agent -s)
+    - echo "$ID_RSA" | tr -d '\r' | ssh-add -
+    - ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+    - ssh $SERVER_USER@$SERVER_IP "docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY"
+    - ssh $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
+    - ssh $SERVER_USER@$SERVER_IP "docker container rm -f ${CI_PROJECT_NAME} || true"
+    - ssh $SERVER_USER@$SERVER_IP "docker run -d -p $WEB_PORT:4444 --network topmove_local_net --name ${CI_PROJECT_NAME} $TAG_COMMIT"
+    - curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" -d "chat_id=$TELEGRAM_CHAT_ID" -d "text=The pipeline has completed $CI_PIPELINE_URL !!!"
