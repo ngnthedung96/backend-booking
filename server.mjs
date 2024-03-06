@@ -94,8 +94,7 @@ loadRoutes().then((router) => {
 });
 
 // start server expressjs
-const port = `${process.env.PORT}`;
-console.log(port, 123123);
+const port = process.env.PORT;
 httpServer.listen(port, () => {
   console.log("Server listening on port: ", port);
 });

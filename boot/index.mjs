@@ -1,14 +1,12 @@
 import { initializeSocketIO } from "./socket";
 import { initializeRedis } from "./redis";
-import { initializeGrpc } from "./grpc";
 import initializeCronJobs from "./cronjobs";
 
 // add more services here
 const initializeServices = (httpServer) => {
-  // Initialize services
+  // ************Initialize services*********************
   initializeSocketIO(httpServer);
   // initializeRedis();
-  initializeGrpc();
   initializeCronJobs();
 };
 
