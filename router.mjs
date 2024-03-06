@@ -12,6 +12,7 @@ const loadRoutes = async () => {
   const files = fs.readdirSync("./modules");
   console.log(files);
   const arrNotAuthen = process.env.MODULE_NOT_AUTH.split(",");
+  console.log(arrNotAuthen);
   const importPromises = files.map(async (name) => {
     console.log(name);
     const stat = fs.statSync(`./modules/${name}`).isDirectory();
