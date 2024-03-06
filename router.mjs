@@ -19,6 +19,7 @@ const loadRoutes = async () => {
       if (!arrNotAuthen.includes(name)) {
         router.use(`/${name}`, passport.authenticate, route);
       } else {
+        console.log(name, 123123);
         router.use(`/${name}`, route);
       }
     }
