@@ -10,11 +10,8 @@ const loadRoutes = async () => {
   router.use(passport.init());
 
   const files = fs.readdirSync("./modules");
-  console.log(files);
   const arrNotAuthen = process.env.MODULE_NOT_AUTH.split(",");
-  console.log(arrNotAuthen);
   const importPromises = files.map(async (name) => {
-    console.log(name);
     const stat = fs.statSync(`./modules/${name}`).isDirectory();
     if (stat) {
       const path = `./modules/${name}`;
@@ -22,7 +19,6 @@ const loadRoutes = async () => {
       if (!arrNotAuthen.includes(name)) {
         router.use(`/${name}`, passport.authenticate, route);
       } else {
-        console.log(name, 123123);
         router.use(`/${name}`, route);
       }
     }
