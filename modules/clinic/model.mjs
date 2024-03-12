@@ -8,6 +8,10 @@ const { Schema } = mongoose;
 
 const ClinicSchema = new Schema(
   {
+    name: {
+      type: String,
+      default: "",
+    },
     address: {
       type: String,
       default: "",
@@ -44,4 +48,4 @@ const ClinicSchema = new Schema(
 
 ClinicSchema.plugin(mongoPagination);
 ClinicSchema.set("toJSON", { getters: true });
-export default mongoConnect.model("clinic", ClinicSchema);
+export default mongoConnect.model("clinics", ClinicSchema);

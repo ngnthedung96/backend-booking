@@ -4,11 +4,12 @@
 import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import { isEmpty } from "ramda";
-import Users from "../users/model";
 import CoreCtrl from "../core";
 import hash from "../../libs/hash";
-import { UserSvc } from "../../services/index.mjs";
-
+import { DefaultSvc, UserSvc } from "../../services/index.mjs";
+import { sendMail } from "../../libs/mailer.mjs";
+import { UserDb } from "../index.mjs";
+import mongoose from "mongoose";
 // import multer from "multer ";
 dotenv.config();
 // setting const
@@ -21,6 +22,8 @@ const rfTokenExpireDate = process.env.RF_TOKEN_EXPIRE_DATE;
 const saltLength = +process.env.SALT_LENGTH;
 
 const userService = new UserSvc();
+const defaultService = new DefaultSvc();
+
 class Ctrl extends CoreCtrl {
   // eslint-disable-next-line no-useless-constructor, no-restricted-syntax
   constructor(model) {
@@ -29,7 +32,6 @@ class Ctrl extends CoreCtrl {
 
   login = async (req, res, next) => {
     try {
-      console.log(process.env.CONNECT_STRING);
       // define const, variables
       const { cookies } = req;
       const { account, password } = req.body;
@@ -57,7 +59,7 @@ class Ctrl extends CoreCtrl {
       if (user.status === userService.STATUS_DISABLED) {
         return next({
           statusCode: 403,
-          message: "Tài khoản đã bị khóa!",
+          message: "Tài khoản đã bị khóa hoặc chưa xác thực email!",
         });
       }
 
@@ -158,6 +160,101 @@ class Ctrl extends CoreCtrl {
     }
   };
 
+  //  gửi mail reset pass
+  sendingMailChangePass = async (req, res, next) => {
+    try {
+      // define const, variables
+      const { email } = req.query;
+      /**
+       * Begin logic process
+       */
+      let user = await super.getOne([
+        {
+          $match: {
+            email,
+          },
+        },
+      ]);
+      user = !isEmpty(user) ? user[0] : null;
+      if (!user) {
+        throw {
+          statusCode: 400,
+          message: "Không tìm thấy tài khoản",
+        };
+      }
+      const generateCode = defaultService.randomNumber(10000, 99999);
+
+      const sendingEmail = await sendMail(
+        email,
+        "Confirm Email",
+        `<p>Your verification code is: ${generateCode}</p>`
+      );
+
+      if (!sendingEmail?.accepted || isEmpty(sendingEmail?.accepted)) {
+        throw {
+          statusCode: 400,
+          message: "Có lỗi khi gửi email xác thực",
+        };
+      }
+      await super.newUpdate(
+        {
+          codeChangePass: generateCode,
+        },
+        {
+          _id: user._id,
+        }
+      );
+      // response data success
+      res.locals.resData = {
+        statusCode: 200,
+        message: "Gửi mã xác thực về email thành công",
+      };
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+  // reset code used to change pass
+  checkCodeChangePass = async (req, res, next) => {
+    try {
+      const { code, id, newPassword } = req.body;
+      const formattedUserId = mongoose.Types.ObjectId(id);
+      const user = await UserDb.findOne({
+        _id: formattedUserId,
+        codeChangePass: code,
+      });
+      if (!user) {
+        throw {
+          statusCode: 400,
+          message: "Mã không hợp lệ! Vui lòng nhận lại mã",
+        };
+      }
+      const hashFn = hash.createHashPasswordFn(
+        saltLength,
+        iterations,
+        keylength,
+        digest
+      );
+      const passHash = await hashFn(newPassword);
+      await super.newUpdate(
+        {
+          codeChangePass: "",
+          password: passHash.hash,
+          salt: passHash.salt,
+        },
+        {
+          _id: user._id,
+        }
+      );
+      res.locals.resData = {
+        statusCode: 200,
+        message: "Thay đổi mật khẩu thành công",
+      };
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
   // thực hiện logout users
   logout = async (req, res, next) => {
     try {
@@ -210,7 +307,7 @@ class Ctrl extends CoreCtrl {
   register = async (req, res, next) => {
     try {
       // get params in body
-      const { name, phone, email, password } = req.body;
+      const { name, phone, email, password, imageLink, address } = req.body;
 
       // define response params
       let statusCode;
@@ -228,8 +325,8 @@ class Ctrl extends CoreCtrl {
           { phone: { $regex: phone, $options: "i" } },
           { email: { $regex: email, $options: "i" } },
         ],
+        status: 0,
       });
-
       if (isEmpty(existUser)) {
         const hashFn = hash.createHashPasswordFn(
           saltLength,
@@ -244,9 +341,22 @@ class Ctrl extends CoreCtrl {
           email,
           password: passHash.hash,
           salt: passHash.salt,
-          status: 1,
+          imageLink,
+          address,
+          status: 0,
         });
+        const sendingEmail = await sendMail(
+          email,
+          "Confirm Email",
+          "<p>Please confirm your email</p>"
+        );
 
+        if (!sendingEmail?.accepted || isEmpty(sendingEmail?.accepted)) {
+          throw {
+            statusCode: 400,
+            message: "Có lỗi khi gửi email xác thực",
+          };
+        }
         // set reponse message + data
         statusCode = 201;
         message = "Register successfully!";
@@ -272,56 +382,28 @@ class Ctrl extends CoreCtrl {
       next(err);
     }
   };
-
-  // change password
-  changePass = async (req, res, next) => {
+  // verify email
+  verifyEmail = async (req, res, next) => {
     try {
-      const { password, newPassword } = req.body;
       const { id } = req.params;
-      const hashFn = hash.createHashPasswordFn(
-        saltLength,
-        iterations,
-        keylength,
-        digest
-      );
-      const user = await Users.findOne({ _id: id });
-      const passHash = await hashFn(newPassword);
-      const passIsValid = await hash.isPasswordCorrect(
+      const formattedUserId = mongoose.Types.ObjectId(id);
+      await super.newUpdate(
         {
-          hash: user.password,
-          salt: user.salt,
-          iterations,
-          keylength,
-          digest,
+          status: userService.STATUS_WORKING,
         },
-        password
+        {
+          _id: formattedUserId,
+        }
       );
-
-      if (!passIsValid) {
-        throw new Error({
-          statusCode: 401,
-          message: "Password incorrect!",
-        });
-      } else {
-        password = newPassword;
-      }
-      // pass
-      const result = await super.update(id, {
-        password: passHash.hash,
-        salt: passHash.salt,
-      });
-
       res.locals.resData = {
         statusCode: 200,
-        message: "success",
-        data: result,
+        message: "Xác thực email thành công",
       };
       next();
     } catch (err) {
       next(err);
     }
   };
-
   // Refresh Token base
   refresh = async (req, res, next) => {
     try {
@@ -402,4 +484,4 @@ class Ctrl extends CoreCtrl {
   };
 }
 
-export default new Ctrl(Users);
+export default new Ctrl(UserDb);

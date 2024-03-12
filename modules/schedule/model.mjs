@@ -19,7 +19,15 @@ const ScheduleSchema = new Schema(
     doctorId: {
       type: Schema.Types.ObjectId,
     },
-    time: {
+    timeStart: {
+      type: Number,
+      default: 0,
+    },
+    timeEnd: {
+      type: Number,
+      default: 0,
+    },
+    timeCreate: {
       type: Number,
       default: 0,
     },
@@ -43,4 +51,4 @@ const ScheduleSchema = new Schema(
 
 ScheduleSchema.plugin(mongoPagination);
 ScheduleSchema.set("toJSON", { getters: true });
-export default mongoConnect.model("schedule", ScheduleSchema);
+export default mongoConnect.model("schedules", ScheduleSchema);

@@ -32,11 +32,19 @@ const UserSchema = new Schema(
       type: String,
       default: "",
     },
+    position: {
+      type: Number,
+      default: 0,
+    },
     salt: {
       type: String,
       default: "",
     },
     password: {
+      type: String,
+      default: "",
+    },
+    codeChangePass: {
       type: String,
       default: "",
     },
@@ -56,7 +64,7 @@ const UserSchema = new Schema(
       type: Array,
       default: [],
     },
-    roleId: {
+    role: {
       type: Number,
       default: 0,
     },

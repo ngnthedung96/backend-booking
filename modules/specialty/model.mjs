@@ -8,6 +8,10 @@ const { Schema } = mongoose;
 
 const SpecialtySchema = new Schema(
   {
+    name: {
+      type: String,
+      default: "",
+    },
     description: {
       type: String,
       default: "",
@@ -36,4 +40,4 @@ const SpecialtySchema = new Schema(
 
 SpecialtySchema.plugin(mongoPagination);
 SpecialtySchema.set("toJSON", { getters: true });
-export default mongoConnect.model("specialty", SpecialtySchema);
+export default mongoConnect.model("specialties", SpecialtySchema);

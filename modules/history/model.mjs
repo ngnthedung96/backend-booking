@@ -15,9 +15,21 @@ var HistorySchema = new Schema(
       type: String,
       default: "",
     },
-    time: {
+    timeStart: {
       type: Number,
       default: 0,
+    },
+    timeEnd: {
+      type: Number,
+      default: 0,
+    },
+    timeCreate: {
+      type: Number,
+      default: 0,
+    },
+    files: {
+      type: String,
+      default: "",
     },
     status: {
       type: Number,
@@ -38,4 +50,4 @@ HistorySchema.statics.createLogAction = async function (data) {
 HistorySchema.plugin(mongoPagination);
 HistorySchema.set("toJSON", { getters: true, timestamps: true });
 
-export default mongoConnect.model("history", HistorySchema);
+export default mongoConnect.model("histories", HistorySchema);

@@ -5,32 +5,9 @@ import { validator, body } from "../validator"; // create new router
 import UserCtrl from "./controller.mjs";
 import { UserSvc } from "../../services/index.mjs";
 const userService = new UserSvc();
-// // get all users
-// router.get("/", UserCtrl.getList);
-// router.get("/:id", UserCtrl.getUserById);
 
-// // create user
-// router.post(
-//   "/search/:data",
-
-//   UserCtrl.search
-// );
-// router.post(
-//   "/search-short/:data",
-
-//   UserCtrl.search_short
-// );
-// router.post("/", UserCtrl.create);
 // router.put("/:id", UserCtrl.update); // update user
 // router.put("/change/:id", UserCtrl.changePass); //change password
-// router.post(
-//   "/forgot/:id",
-//   UserCtrl.forgotPass
-// ); // thực hiện khi người dùng quên mật khẩu
-// router.post(
-//   "/forgot",
-//   UserCtrl.forgotPass2
-// ); // thực hiện khi người dùng quên mật khẩu
 // router.delete("/:id", UserCtrl.delete); // delete user
 router.post(
   "/",

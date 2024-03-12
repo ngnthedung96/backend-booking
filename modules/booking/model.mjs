@@ -8,17 +8,21 @@ const { Schema } = mongoose;
 
 const BookingSchema = new Schema(
   {
-    statusId: {
-      type: Number,
-      default: 0,
-    },
     doctorId: {
       type: Schema.Types.ObjectId,
     },
     patientId: {
       type: Schema.Types.ObjectId,
     },
-    time: {
+    timeStart: {
+      type: Number,
+      default: 0,
+    },
+    timeEnd: {
+      type: Number,
+      default: 0,
+    },
+    timeCreate: {
       type: Number,
       default: 0,
     },
@@ -42,4 +46,4 @@ const BookingSchema = new Schema(
 
 BookingSchema.plugin(mongoPagination);
 BookingSchema.set("toJSON", { getters: true });
-export default mongoConnect.model("booking", BookingSchema);
+export default mongoConnect.model("bookings", BookingSchema);
