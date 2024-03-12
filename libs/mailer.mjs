@@ -13,13 +13,16 @@ const sendMail = async (to, subject, htmlContent) => {
   //   },
   // });
   var transporter = nodeMailer.createTransport({
-    service: "gmail",
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    service: "Gmail",
+    port: 25,
+    secure: false,
     auth: {
       user: process.env.SMPT_MAIL,
       pass: process.env.SMPT_APP_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 
