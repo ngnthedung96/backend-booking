@@ -1,48 +1,50 @@
 import Users from "./model.mjs";
 import CoreCtrl from "../core.mjs";
 import moment from "moment";
+import mongoose from "mongoose";
+import { isEmpty } from "ramda";
 // define constant
 class Ctrl extends CoreCtrl {
   constructor(model) {
     super(model);
   }
   // //lấy toàn bộ user ra
-  // getList = async (req, res, next) => {
-  //   try {
-  //     let { page, limit } = req.query;
-  //     let result = await super._getList({
-  //       page,
-  //       limit,
-  //     });
+  getList = async (req, res, next) => {
+    try {
+      let { page, limit } = req.query;
+      let result = await super._getList({
+        page,
+        limit,
+      });
 
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       data: {
-  //         total: result.total,
-  //         pages: result.pages,
-  //         docs: result.docs.map((obj) => {
-  //           return {
-  //             _id: obj._id,
-  //             name: obj.name,
-  //             imgUrl: obj.imgUrl,
-  //             email: obj.email,
-  //             phone: obj.phone,
-  //             password: obj.password,
-  //             adress: obj.adress,
-  //             accountCode: obj.accountCode,
-  //             port: obj.port,
-  //             role: obj.role,
-  //             updatedAt: obj.updatedAt,
-  //             createdAt: obj.createdAt,
-  //           };
-  //         }),
-  //       },
-  //     };
-  //     next();
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
+      res.locals.resData = {
+        statusCode: 200,
+        data: {
+          total: result.total,
+          pages: result.pages,
+          docs: result.docs.map((obj) => {
+            return {
+              _id: obj._id,
+              name: obj.name,
+              imgUrl: obj.imgUrl,
+              email: obj.email,
+              phone: obj.phone,
+              password: obj.password,
+              adress: obj.adress,
+              accountCode: obj.accountCode,
+              port: obj.port,
+              role: obj.role,
+              updatedAt: obj.updatedAt,
+              createdAt: obj.createdAt,
+            };
+          }),
+        },
+      };
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
   // //tìm kiếm
   // // search = async (req, res, next) => {
   // //   try {
@@ -161,138 +163,32 @@ class Ctrl extends CoreCtrl {
   //     next(error);
   //   }
   // };
-  // //tìm user theo id
-  // getUserById = async (req, res, next) => {
-  //   try {
-  //     const id = req.params.id;
-  //     let result = await Users.findById(id);
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       message: "success",
-
-  //       data: {
-  //         id: result.id,
-  //         name: result.name,
-  //         imgUrl: result.imgUrl,
-  //         email: result.email,
-  //         phone: result.phone,
-  //         password: result.password,
-  //         adress: result.adress,
-  //         role: result.role,
-  //         updatedAt: result.updatedAt,
-  //         createdAt: result.createdAt,
-  //       },
-  //     };
-  //     next();
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
-
-  // create = async (req, res, next) => {
-  //   try {
-  //     const { name, email, phone, accountCode, password } = req.body;
-  //     console.log(req.body);
-  //     let result = await super.create({
-  //       name,
-  //       email,
-  //       phone,
-  //       accountCode,
-  //       password,
-  //     });
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       message: "success",
-  //       data: result,
-  //     };
-  //     next();
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
-
-  // update = async (req, res, next) => {
-  //   try {
-  //     const { name, phone } = req.body;
-  //     const { id } = req.params;
-  //     console.log(req.params);
-  //     let result = await super.update(id, { name, phone });
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       message: "success",
-  //       data: result,
-  //     };
-  //     next();
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
-
-  // changePass = async (req, res, next) => {
-  //   try {
-  //     const { name, password } = req.body;
-
-  //     const { id } = req.params;
-  //     console.log(req.params);
-  //     let result = await super.update(id, { name, password });
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       message: "success",
-  //       data: result,
-  //     };
-  //     next();
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
-
-  // forgotPass = async (req, res, next) => {
-  //   try {
-  //     const { email } = req.body.email;
-  //     const { id } = req.params;
-  //     let result = await super.update(id, { email });
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       message: "success",
-  //       data: result,
-  //     };
-  //     next();
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
-
-  // forgotPass2 = async (req, res, next) => {
-  //   try {
-  //     const { email } = req.body.email;
-  //     let result = await Users.findOne(email);
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       message: "success",
-  //       data: result,
-  //     };
-  //     next();
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
-  // delete = async (req, res, next) => {
-  //   try {
-  //     const { id } = req.params;
-  //     console.log("hahah", id);
-  //     let result = await super.delete(id);
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       message: "success",
-  //       data: {
-  //         id: result._id,
-  //       },
-  //     };
-  //     next();
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
+  //tìm user theo id
+  getUserById = async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      let result = await Users.findById(id);
+      res.locals.resData = {
+        statusCode: 200,
+        message: "success",
+        data: {
+          name: result.name,
+          phone: result.phone,
+          email: result.email,
+          imageLink: result.imageLink,
+          gender: result.gender,
+          address: result.address,
+          position: result.position,
+          time: result.time,
+          status: result.status,
+          role: result.role,
+        },
+      };
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
 
   create = async (req, res, next) => {
     try {
@@ -307,8 +203,120 @@ class Ctrl extends CoreCtrl {
       });
       res.locals.resData = {
         statusCode: 200,
+        message: "Tạo thành công",
+        data: result,
+      };
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateDoctorIn4 = async (req, res, next) => {
+    try {
+      const { name, phone, gender, roleId } = req.body;
+      const { id } = req.params;
+      const formattedId = mongoose.Types.ObjectId(id);
+      let doctor = await super.getOne([
+        {
+          $match: {
+            _id: formattedId,
+          },
+        },
+        {
+          $project: {
+            id: "$_id",
+            name: 1,
+            phone: 1,
+            gender: 1,
+            roleId: 1,
+          },
+        },
+      ]);
+      doctor = !isEmpty(doctor) ? doctor[0] : null;
+      if (!doctor) {
+        throw {
+          statusCode: 404,
+          message: "Không tìm thấy tài khoản",
+        };
+      }
+      const {
+        name: oldName,
+        phone: oldPhone,
+        gender: oldGender,
+        roleId: oldRoleId,
+      } = doctor;
+      if (roleId && roleId != oldRoleId) {
+        if (!req.admin) {
+          throw {
+            statusCode: 404,
+            message: "Không có quyền truy cập",
+          };
+        }
+      }
+      let result = await super.update(id, { name, phone, gender, roleId });
+      res.locals.resData = {
+        statusCode: 200,
         message: "success",
         data: result,
+      };
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateUserIn4 = async (req, res, next) => {
+    try {
+      if (!req.patient) {
+        throw {
+          statusCode: 404,
+          message: "Không có quyền truy cập",
+        };
+      }
+      const { name, phone, gender } = req.body;
+      const { id } = req.user;
+      let result = await super.update(id, { name, phone, gender });
+      res.locals.resData = {
+        statusCode: 200,
+        message: "Chỉnh sửa thành công",
+        data: result,
+      };
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  changePass = async (req, res, next) => {
+    try {
+      const { name, password } = req.body;
+
+      const { id } = req.params;
+      console.log(req.params);
+      let result = await super.update(id, { name, password });
+      res.locals.resData = {
+        statusCode: 200,
+        message: "success",
+        data: result,
+      };
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  delete = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      console.log("hahah", id);
+      let result = await super.delete(id);
+      res.locals.resData = {
+        statusCode: 200,
+        message: "success",
+        data: {
+          id: result._id,
+        },
       };
       next();
     } catch (err) {

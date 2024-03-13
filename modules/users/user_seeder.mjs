@@ -19,7 +19,7 @@ for (let i = 0; i < 15; i++) {
     keylength,
     digest
   );
-  const passHash = await hashFn("1");
+  const passHash = await hashFn("1234567");
   items.push({
     name: faker.lorem.text(),
     description: faker.lorem.text(),
