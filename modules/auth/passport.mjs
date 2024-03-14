@@ -16,7 +16,7 @@ jwtOptions.secretOrKey = process.env.SECRET_KEY;
 // lets create our strategy for web token
 var strategy = new JwtStrategy(jwtOptions, async (jwt_payload, next) => {
   var user = await Users.findOne({
-    phone: jwt_payload.phone,
+    email: jwt_payload.email,
   });
   if (user) {
     next(null, user);

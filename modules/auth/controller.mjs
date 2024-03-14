@@ -85,7 +85,7 @@ class Ctrl extends CoreCtrl {
       // pass
       const tokenInfo = {
         id: user._id,
-        phone: user.phone,
+        email: user.email,
         role: user.role,
       };
       const accessToken = jwt.sign(tokenInfo, secretKey, {
@@ -442,7 +442,7 @@ class Ctrl extends CoreCtrl {
       // Refresh token was still valid
       const tokenInfo = {
         id: foundUser._id,
-        phone: foundUser.phone,
+        email: foundUser.email,
         role: foundUser.role,
       };
       const accessToken = jwt.sign(tokenInfo, secretKey, {

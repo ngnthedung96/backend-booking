@@ -45,11 +45,6 @@ export default class CoreCtrl {
       }
 
       obj.set(data);
-      const err = this._validate(obj);
-      if (err) {
-        throw err;
-      }
-
       const result = await obj.save();
       console.log("Update result: ", result);
       return result;
