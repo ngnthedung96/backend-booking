@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 import { isEmpty } from "ramda";
 import CoreCtrl from "../core";
 import hash from "../../libs/hash";
-import { DefaultSvc, UserSvc } from "../../services/index.mjs";
+import { AuthSvc, DefaultSvc, UserSvc } from "../../services/index.mjs";
 import { sendMail } from "../../libs/mailer.mjs";
 import { UserDb } from "../index.mjs";
 import mongoose from "mongoose";
@@ -23,6 +23,7 @@ const saltLength = +process.env.SALT_LENGTH;
 
 const userService = new UserSvc();
 const defaultService = new DefaultSvc();
+const authService = new AuthSvc();
 
 class Ctrl extends CoreCtrl {
   // eslint-disable-next-line no-useless-constructor, no-restricted-syntax
@@ -186,8 +187,11 @@ class Ctrl extends CoreCtrl {
 
       const sendingEmail = await sendMail(
         email,
-        "Confirm Email",
-        `<p>Your verification code is: ${generateCode}</p>`
+        "Đặt lại mật khẩu",
+        authService.getHTMLResetPass(
+          generateCode,
+          process.env.APP_FRONT_URL + `/cai-dat-lai-mat-khau?id=${user._id}`
+        )
       );
 
       if (!sendingEmail?.accepted || isEmpty(sendingEmail?.accepted)) {
@@ -344,8 +348,10 @@ class Ctrl extends CoreCtrl {
         });
         const sendingEmail = await sendMail(
           email,
-          "Confirm Email",
-          "<p>Please confirm your email</p>"
+          "Xác thực email",
+          authService.getHTMLVerifyEmail(
+            process.env.APP_FRONT_URL + `/xac-thuc-email?id=${newUser._id}`
+          )
         );
 
         if (!sendingEmail?.accepted || isEmpty(sendingEmail?.accepted)) {
