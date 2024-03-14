@@ -5,17 +5,18 @@ dotenv.config();
 // for authenticate
 import passport from "passport";
 import passportJWT from "passport-jwt";
+import { UserSvc } from "../../services/index.mjs";
+
+const userService = new UserSvc();
 const ExtractJwt = passportJWT.ExtractJwt;
 const JwtStrategy = passportJWT.Strategy;
 var jwtOptions = {};
 jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 jwtOptions.secretOrKey = process.env.SECRET_KEY;
-
 // lets create our strategy for web token
 var strategy = new JwtStrategy(jwtOptions, async (jwt_payload, next) => {
   var user = await Users.findOne({
     phone: jwt_payload.phone,
-    roleId: jwt_payload.roleId,
   });
   if (user) {
     next(null, user);
@@ -52,8 +53,14 @@ export default {
         }
 
         // Forward user information to the next middleware
-        console.log(user);
-        req.user = user;
+        const { role } = user;
+        if (role == userService.ROLE_ADMIN) {
+          req.admin = user;
+        } else if (role == userService.ROLE_DOCTOR) {
+          req.doctor = user;
+        } else if (role == userService.ROLE_PATIENT) {
+          req.patient = user;
+        }
         next();
       }
     )(req, res, next);

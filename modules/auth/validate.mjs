@@ -35,6 +35,22 @@ const validate = (method) => {
             }),
           body("password", "Mật khẩu không hợp lệ").notEmpty(),
           body("name", "Tên người dùng không hợp lệ").notEmpty(),
+          body("gender", "Giới tính không hợp lệ").custom(async (value) => {
+            try {
+              if (!value) {
+                return true;
+              } else {
+                if (
+                  value != userService.GENDER_FEMALE &&
+                  value != userService.GENDER_MALE &&
+                  value != userService.UNKNOWN_GENDER
+                )
+                  throw new Error("Giới tính không hợp lệ");
+              }
+            } catch (err) {
+              throw new Error(err);
+            }
+          }),
         ];
       }
       break;

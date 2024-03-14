@@ -17,8 +17,6 @@ export default class CoreCtrl {
     return this.model.aggregatePaginate(myAggregate, options);
   }
 
-  getObject(obj) {}
-
   create(data) {
     const obj = new this.model(data);
     const err = obj.validateSync();
@@ -64,8 +62,14 @@ export default class CoreCtrl {
     const result = await this.model.findByIdAndDelete(id);
     return result;
   }
-
-  async getOne(aggregateOpt, orders = { id: -1 }) {
+  async getPagination(aggregateOpt, options) {
+    const myAggregate = aggregateOpt
+      ? this.model.aggregate(aggregateOpt)
+      : this.model.aggregate();
+    let result = await this.model.aggregatePaginate(myAggregate, options);
+    return result;
+  }
+  async getEntry(aggregateOpt) {
     let result = await this.model.aggregate(aggregateOpt);
     return result;
   }

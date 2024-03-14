@@ -39,7 +39,7 @@ class Ctrl extends CoreCtrl {
        * Begin logic process
        */
 
-      let user = await super.getOne([
+      let user = await super.getEntry([
         {
           $match: {
             $or: [{ phone: account }, { email: account }],
@@ -86,7 +86,7 @@ class Ctrl extends CoreCtrl {
       const tokenInfo = {
         id: user._id,
         phone: user.phone,
-        roleId: user.roleId,
+        role: user.role,
       };
       const accessToken = jwt.sign(tokenInfo, secretKey, {
         expiresIn: tokenExpireDate,
@@ -168,7 +168,7 @@ class Ctrl extends CoreCtrl {
       /**
        * Begin logic process
        */
-      let user = await super.getOne([
+      let user = await super.getEntry([
         {
           $match: {
             email,
@@ -280,11 +280,6 @@ class Ctrl extends CoreCtrl {
             secure: true,
           });
         }
-      } else {
-        throw {
-          statusCode: 404,
-          message: "Logout fail!",
-        };
       }
 
       /**
@@ -307,7 +302,8 @@ class Ctrl extends CoreCtrl {
   register = async (req, res, next) => {
     try {
       // get params in body
-      const { name, phone, email, password, imageLink, address } = req.body;
+      const { name, phone, email, password, imageLink, address, gender } =
+        req.body;
 
       // define response params
       let statusCode;
@@ -342,6 +338,7 @@ class Ctrl extends CoreCtrl {
           password: passHash.hash,
           salt: passHash.salt,
           imageLink,
+          gender,
           address,
           status: 0,
         });
@@ -446,7 +443,7 @@ class Ctrl extends CoreCtrl {
       const tokenInfo = {
         id: foundUser._id,
         phone: foundUser.phone,
-        roleId: foundUser.roleId,
+        role: foundUser.role,
       };
       const accessToken = jwt.sign(tokenInfo, secretKey, {
         expiresIn: tokenExpireDate,

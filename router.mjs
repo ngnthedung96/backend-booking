@@ -33,15 +33,7 @@ const loadRoutes = async () => {
     const { method } = req;
     const url = req.originalUrl;
     const date = new Date();
-    const moduleName = url.split("/")[2] || "";
-    const logModule = [
-      "jnt",
-      "bestexpress",
-      "vnpost",
-      "ghtk",
-      "viettelpost",
-      "ghn",
-    ];
+
     // Ghi thông tin vào console (hoặc có thể ghi vào file, database,...)
     // eslint-disable-next-line no-console
     gLogger.info(
@@ -52,16 +44,7 @@ const loadRoutes = async () => {
         `Input: ${JSON.stringify(req.body || req.params || req.query)}`
       );
     }
-    if (moduleName && logModule.includes(moduleName)) {
-      gLogger.add(
-        new DailyRotateFile({
-          filename: `logs/${moduleName}/%DATE%.log`,
-          datePattern: "YYYY-MM-DD",
-          prepend: true,
-          maxFiles: "7d",
-        })
-      );
-    }
+
     next();
   });
 

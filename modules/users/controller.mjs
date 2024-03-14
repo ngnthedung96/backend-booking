@@ -11,35 +11,70 @@ class Ctrl extends CoreCtrl {
   // //lấy toàn bộ user ra
   getList = async (req, res, next) => {
     try {
-      let { page, limit } = req.query;
-      let result = await super._getList({
-        page,
-        limit,
-      });
-
-      res.locals.resData = {
-        statusCode: 200,
-        data: {
-          total: result.total,
-          pages: result.pages,
-          docs: result.docs.map((obj) => {
-            return {
-              _id: obj._id,
-              name: obj.name,
-              imgUrl: obj.imgUrl,
-              email: obj.email,
-              phone: obj.phone,
-              password: obj.password,
-              adress: obj.adress,
-              accountCode: obj.accountCode,
-              port: obj.port,
-              role: obj.role,
-              updatedAt: obj.updatedAt,
-              createdAt: obj.createdAt,
-            };
-          }),
-        },
-      };
+      let { page, limit, dateRange, search } = req.query;
+      const formattedLimit = Number(limit);
+      const formattedPage = Number(page);
+      const objCondition = {};
+      if (mongoose.Types.ObjectId.isValid(search)) {
+        objCondition._id = mongoose.Types.ObjectId(search);
+      }
+      if (dateRange) {
+        const dateArr = dateRange.split("-");
+        const startDate = dateArr[0];
+        const formattedStartDate = moment(startDate, "DD/MM/YYYY")
+          .startOf("day")
+          .unix();
+        const endDate = dateArr[1];
+        const formattedEndDate = moment(endDate, "DD/MM/YYYY")
+          .endOf("day")
+          .unix();
+        objCondition.time = {
+          $gt: formattedStartDate,
+          $lt: formattedEndDate,
+        };
+      }
+      let result = await super.getPagination(
+        [
+          {
+            $match: objCondition,
+          },
+          {
+            $project: {
+              id: "$_id",
+              name: 1,
+              phone: 1,
+              email: 1,
+              imageLink: 1,
+              gender: 1,
+              address: 1,
+              position: 1,
+              time: 1,
+              status: 1,
+              role: 1,
+            },
+          },
+          { $sort: { id: -1 } },
+        ],
+        {
+          limit: formattedLimit,
+          page: formattedPage,
+        }
+      );
+      if (!isEmpty(result)) {
+        res.locals.resData = {
+          statusCode: 200,
+          data: {
+            total: result.total,
+            pages: result.pages,
+            docs: result.docs,
+          },
+        };
+      } else {
+        throw {
+          statusCode: 400,
+          message: "Không có bản ghi nào cả",
+        };
+      }
       next();
     } catch (err) {
       next(err);
@@ -192,14 +227,38 @@ class Ctrl extends CoreCtrl {
 
   create = async (req, res, next) => {
     try {
-      const { phone, email, name, password, roleId, gender } = req.body;
+      if (!req.admin) {
+        throw {
+          statusCode: 400,
+          message: "Không có quyền thao tác",
+        };
+      }
+      const { phone, email, name, password, role, gender, imageLink, address } =
+        req.body;
+      // check user exist, check email, name, phone
+      const existUser = await this.model.find({
+        $or: [
+          { name: { $regex: name, $options: "i" } },
+          { phone: { $regex: phone, $options: "i" } },
+          { email: { $regex: email, $options: "i" } },
+        ],
+        status: 0,
+      });
+      if (!isEmpty(existUser)) {
+        throw {
+          statusCode: 400,
+          message: "Đã tồn tại tài khoản",
+        };
+      }
       let result = await super.newCreate({
         name,
         phone,
         email,
         password,
         gender,
-        roleId,
+        role,
+        imageLink,
+        address,
       });
       res.locals.resData = {
         statusCode: 200,
@@ -214,10 +273,10 @@ class Ctrl extends CoreCtrl {
 
   updateDoctorIn4 = async (req, res, next) => {
     try {
-      const { name, phone, gender, roleId } = req.body;
+      const { name, phone, gender, imageLink, address, role } = req.body;
       const { id } = req.params;
       const formattedId = mongoose.Types.ObjectId(id);
-      let doctor = await super.getOne([
+      let doctor = await super.getEntry([
         {
           $match: {
             _id: formattedId,
@@ -229,7 +288,7 @@ class Ctrl extends CoreCtrl {
             name: 1,
             phone: 1,
             gender: 1,
-            roleId: 1,
+            role: 1,
           },
         },
       ]);
@@ -244,9 +303,9 @@ class Ctrl extends CoreCtrl {
         name: oldName,
         phone: oldPhone,
         gender: oldGender,
-        roleId: oldRoleId,
+        role: oldRole,
       } = doctor;
-      if (roleId && roleId != oldRoleId) {
+      if (role && role != oldRole) {
         if (!req.admin) {
           throw {
             statusCode: 404,
@@ -254,7 +313,13 @@ class Ctrl extends CoreCtrl {
           };
         }
       }
-      let result = await super.update(id, { name, phone, gender, roleId });
+      let result = await super.update(id, {
+        name,
+        phone,
+        gender,
+        imageLink,
+        address,
+      });
       res.locals.resData = {
         statusCode: 200,
         message: "success",
@@ -274,9 +339,15 @@ class Ctrl extends CoreCtrl {
           message: "Không có quyền truy cập",
         };
       }
-      const { name, phone, gender } = req.body;
+      const { name, phone, gender, imageLink, address } = req.body;
       const { id } = req.user;
-      let result = await super.update(id, { name, phone, gender });
+      let result = await super.update(id, {
+        name,
+        phone,
+        gender,
+        imageLink,
+        address,
+      });
       res.locals.resData = {
         statusCode: 200,
         message: "Chỉnh sửa thành công",
@@ -293,7 +364,6 @@ class Ctrl extends CoreCtrl {
       const { name, password } = req.body;
 
       const { id } = req.params;
-      console.log(req.params);
       let result = await super.update(id, { name, password });
       res.locals.resData = {
         statusCode: 200,

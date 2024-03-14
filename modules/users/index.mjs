@@ -5,8 +5,22 @@ import checkValid from "./validate";
 import validate from "../validate";
 import UserCtrl from "./controller.mjs";
 
-router.get("/get-one/:id", UserCtrl.getUserById); // get user
-router.put("/edit/:id", UserCtrl.update); // update user
+router.get("/get-list", checkValid("getList"), validate, UserCtrl.getList); // get user
+router.get("/get-one/:id", UserCtrl.getUserById); //get user
+router.put(
+  "/edit-doctor/:id",
+  passport.authenticate,
+  checkValid("update"),
+  validate,
+  UserCtrl.updateDoctorIn4
+); //update doctor
+router.put(
+  "/edit-user/:id",
+  passport.authenticate,
+  checkValid("update"),
+  validate,
+  UserCtrl.updateUserIn4
+); //update user
 router.put("/change/:id", UserCtrl.changePass); //change password
 router.delete("/delete/:id", UserCtrl.delete); // delete user
 router.post(
