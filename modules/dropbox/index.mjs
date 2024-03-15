@@ -6,7 +6,8 @@ import validate from "../validate";
 
 const router = express.Router();
 
-router.get("/", Ctrl.getList);
+router.get("/get-list", Ctrl.getList);
+router.get("/get-url-auth-code", Ctrl.getUrlAuthCode);
 router.post(
   "/create",
   passport.authenticate,

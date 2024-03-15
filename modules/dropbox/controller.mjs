@@ -11,7 +11,7 @@ class Ctrl extends CoreCtrl {
     super(model);
   }
 
-  // hàm này thực hiện lấy ra toàn bộ list Permissions
+  // hàm này thực hiện lấy ra toàn bộ list Dropbox
   getList = async (req, res, next) => {
     try {
       const { page, limit } = req.query;
@@ -37,7 +37,29 @@ class Ctrl extends CoreCtrl {
     }
   };
 
-  // hàm thực hiện việc thêm mới Permissions
+  // hàm này lấy link authorize code
+  getUrlAuthCode = async (req, res, next) => {
+    try {
+      const urlAuthCode = await dropboxService.getAuthUrl();
+      console.log(urlAuthCode);
+      if (!urlAuthCode.status || !urlAuthCode.data) {
+        throw {
+          statusCode: 400,
+          message: urlAuthCode.message,
+        };
+      }
+      res.locals.resData = {
+        statusCode: 200,
+        message: "Lấy đường dẫn xác thực Dropbox thành công",
+        data: urlAuthCode.data,
+      };
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // hàm thực hiện việc thêm mới Dropbox
   create = async (req, res, next) => {
     try {
       if (!req.admin) {
@@ -187,7 +209,7 @@ class Ctrl extends CoreCtrl {
     }
   };
 
-  // hàm thực hiện xóa Permissions
+  // hàm thực hiện xóa Dropbox
   delete = async (req, res, next) => {
     try {
       if (!req.admin) {

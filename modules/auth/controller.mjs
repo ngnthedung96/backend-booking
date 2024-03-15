@@ -6,7 +6,12 @@ import * as dotenv from "dotenv";
 import { isEmpty } from "ramda";
 import CoreCtrl from "../core";
 import hash from "../../libs/hash";
-import { AuthSvc, DefaultSvc, UserSvc } from "../../services/index.mjs";
+import {
+  AuthSvc,
+  DefaultSvc,
+  DropboxSvc,
+  UserSvc,
+} from "../../services/index.mjs";
 import { sendMail } from "../../libs/mailer.mjs";
 import { UserDb } from "../index.mjs";
 import mongoose from "mongoose";
@@ -24,6 +29,7 @@ const saltLength = +process.env.SALT_LENGTH;
 const userService = new UserSvc();
 const defaultService = new DefaultSvc();
 const authService = new AuthSvc();
+const dropboxService = new DropboxSvc();
 
 class Ctrl extends CoreCtrl {
   // eslint-disable-next-line no-useless-constructor, no-restricted-syntax
@@ -145,15 +151,7 @@ class Ctrl extends CoreCtrl {
       res.locals.resData = {
         statusCode: 200,
         message: "Login success",
-        data: {
-          token: accessToken,
-          adminInfo: {
-            name: user.name,
-            phone: user.phone,
-            id: user._id,
-          },
-          refreshToken: newRefreshToken,
-        },
+        data: user,
       };
       next();
     } catch (err) {
@@ -349,6 +347,9 @@ class Ctrl extends CoreCtrl {
           time: currentTime,
           role: userService.ROLE_PATIENT,
         });
+        // save image
+
+        // send mail
         const sendingEmail = await sendMail(
           email,
           "Xác thực email",
