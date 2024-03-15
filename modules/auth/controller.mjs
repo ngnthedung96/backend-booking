@@ -151,7 +151,7 @@ class Ctrl extends CoreCtrl {
       res.locals.resData = {
         statusCode: 200,
         message: "Login success",
-        data: user,
+        data: { ...user, accessToken },
       };
       next();
     } catch (err) {
