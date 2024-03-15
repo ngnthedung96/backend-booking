@@ -231,7 +231,7 @@ class Ctrl extends CoreCtrl {
         };
       }
       const { name, phone, gender, imageLink, address } = req.body;
-      const { id } = req.user;
+      const { id } = req.patient;
       const currentTime = moment().unix();
       const formattedId = mongoose.Types.ObjectId(id);
       let user = await super.getEntry([

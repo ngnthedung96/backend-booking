@@ -27,8 +27,14 @@ const loadRoutes = async () => {
   // eslint-disable-next-line no-unused-vars
   router.use((req, res, next) => {
     // Lấy thông tin người dùng từ req.user nếu bạn có thực hiện xác thực người dùng
-    const user = req.user ? req.user.username : "Guest";
-
+    let user = "Guest";
+    if (req.admin) {
+      user = req.admin.email;
+    } else if (req.doctor) {
+      user = req.doctor.email;
+    } else if (req.patient) {
+      user = req.patient.email;
+    }
     // Lấy thông tin về yêu cầu
     const { method } = req;
     const url = req.originalUrl;

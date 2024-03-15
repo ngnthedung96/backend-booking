@@ -1,6 +1,6 @@
 import { DefaultSvc } from "./index.mjs";
 import * as dotenv from "dotenv";
-import axios from "../";
+import axios from "../libs/axios.mjs";
 dotenv.config();
 class DropboxService extends DefaultSvc {
   constructor() {

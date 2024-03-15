@@ -347,6 +347,7 @@ class Ctrl extends CoreCtrl {
           address,
           status: 0,
           time: currentTime,
+          role: userService.ROLE_PATIENT,
         });
         const sendingEmail = await sendMail(
           email,
