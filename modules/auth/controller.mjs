@@ -305,6 +305,7 @@ class Ctrl extends CoreCtrl {
   // tạo mới user
   register = async (req, res, next) => {
     try {
+      const currentTime = moment().unix();
       // get params in body
       const { name, phone, email, password, imageLink, address, gender } =
         req.body;
@@ -345,6 +346,7 @@ class Ctrl extends CoreCtrl {
           gender,
           address,
           status: 0,
+          time: currentTime,
         });
         const sendingEmail = await sendMail(
           email,
@@ -389,9 +391,11 @@ class Ctrl extends CoreCtrl {
   verifyEmail = async (req, res, next) => {
     try {
       const { id } = req.params;
+      const currentTime = moment().unix();
       const formattedUserId = mongoose.Types.ObjectId(id);
       await super.newUpdate(
         {
+          updatedTime: currentTime,
           status: userService.STATUS_WORKING,
         },
         {

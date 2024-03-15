@@ -1,4 +1,4 @@
-import { check, body, param } from "express-validator";
+import { check, body, param, query } from "express-validator";
 import Users from "./model.mjs";
 import { UserSvc } from "../../services/index.mjs";
 import mongoose from "mongoose";
@@ -75,22 +75,36 @@ const validate = (method) => {
         err = [
           body("name", "Tên không hợp lệ").notEmpty(),
           body("phone", "Số điện thoại không hợp lệ").notEmpty(),
-          body("gender", "Giới thiệu không hợp lệ").notEmpty(),
+          body("gender", "Giới tính không hợp lệ").custom(async (value) => {
+            try {
+              if (!value) {
+                return true;
+              } else {
+                if (
+                  value != userService.GENDER_FEMALE &&
+                  value != userService.GENDER_MALE &&
+                  value != userService.UNKNOWN_GENDER
+                )
+                  throw new Error("Giới tính không hợp lệ");
+              }
+            } catch (err) {
+              throw new Error(err);
+            }
+          }),
           param("id", "Id không hợp lệ").custom((value) => {
-            // if (mongoose.Types.ObjectId.isValid(value)) {
-            //   return Users.findById(value)
-            //     .exec()
-            //     .then((obj) => {
-            //       if (!obj) {
-            //         return Promise.reject("Không tìm thấy khách hàng");
-            //       }
-            //     });
-            // } else {
-            //   throw new Error(
-            //     "Id must be a string of 12 bytes or a string of 24 hex characters or an integer"
-            //   );
-            // }
-            return true;
+            if (mongoose.Types.ObjectId.isValid(value)) {
+              return Users.findById(value)
+                .exec()
+                .then((obj) => {
+                  if (!obj) {
+                    return Promise.reject("Không tìm thấy khách hàng");
+                  }
+                });
+            } else {
+              throw new Error(
+                "Id must be a string of 12 bytes or a string of 24 hex characters or an integer"
+              );
+            }
           }),
         ];
       }
@@ -121,9 +135,9 @@ const validate = (method) => {
     case "change":
       {
         err = [
-          body("name", "Name khong hop le").notEmpty(),
-          body("password", "password khong hop le").notEmpty(),
-          param("id", "Id khong hop le").custom((value) => {
+          body("password", "Mật khẩu cũ không hợp lệ").notEmpty(),
+          body("newPassword", "Mật khẩu mới không hợp lệ").notEmpty(),
+          param("id", "Id không hợp lệ").custom((value) => {
             if (mongoose.Types.ObjectId.isValid(value)) {
               return Users.findById(value)
                 .exec()
@@ -142,7 +156,7 @@ const validate = (method) => {
       }
       break;
     //get list
-    case "search":
+    case "getList":
       {
         err = [
           query("search", "Lọc ngày không hợp lệ")

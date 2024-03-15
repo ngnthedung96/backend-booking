@@ -52,6 +52,10 @@ const UserSchema = new Schema(
       type: Number,
       default: 0,
     },
+    updatedTime: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: Number,
       default: 0,

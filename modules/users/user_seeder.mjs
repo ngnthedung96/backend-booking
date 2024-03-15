@@ -36,6 +36,7 @@ for (let i = 0; i < 15; i++) {
     password: passHash.hash,
     salt: passHash.salt,
     time: moment().unix(),
+    updatedTime: moment().unix(),
     status: faker.number.int({ min: 0, max: 1 }),
     orders: faker.number.int({ min: 0, max: 1 }),
     role: faker.number.int({ min: 1, max: 3 }),

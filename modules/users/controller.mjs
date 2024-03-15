@@ -3,7 +3,9 @@ import CoreCtrl from "../core.mjs";
 import moment from "moment";
 import mongoose from "mongoose";
 import { isEmpty } from "ramda";
+import { UserSvc } from "../../services/index.mjs";
 // define constant
+const userService = new UserSvc();
 class Ctrl extends CoreCtrl {
   constructor(model) {
     super(model);
@@ -80,124 +82,7 @@ class Ctrl extends CoreCtrl {
       next(err);
     }
   };
-  // //tìm kiếm
-  // // search = async (req, res, next) => {
-  // //   try {
-  // //     const { key } = req.params;
-  // //     let result = await super.searchUser(key);
-  // //     res.locals.resData = {
-  // //       statusCode: 200,
-  // //       message: "success",
-  // //       data: {
-  // //         // total: result.total,
-  // //         // pages: result.pages,
-  // //         docs: result.map((obj) => {
-  // //           return {
-  // //             // _id: obj._id,
-  // //             name: obj.name,
-  // //             email: obj.email,
-  // //             phone: obj.phone,
-  // //           };
-  // //         }),
-  // //       },
-  // //     };
-  // //     next();
-  // //   } catch (e) {
-  // //     next(e);
-  // //   }
-  // // };
-  // //hàm thực hiện tìm kiếm khi bấm nút
-  // search = async (req, res, next) => {
-  //   try {
-  //     const { data } = req.params;
-  //     const page = parseInt(req.body.page) || 1;
-  //     const limit = parseInt(req.body.limit) || 10;
-  //     const skip = (page - 1) * limit;
-  //     let result = await this.model
-  //       .find({
-  //         $or: [
-  //           { name: { $regex: data, $options: "i" } },
-  //           { email: { $regex: data, $options: "i" } },
-  //           { phone: { $regex: data, $options: "i" } },
-  //         ],
-  //       })
-  //       .skip(skip)
-  //       .limit(parseInt(limit));
-  //     let total = await this.model.aggregate([
-  //       {
-  //         $match: {
-  //           $or: [
-  //             { name: { $regex: data, $options: "i" } },
-  //             { email: { $regex: data, $options: "i" } },
-  //             { phone: { $regex: data, $options: "i" } },
-  //           ],
-  //         },
-  //       },
-  //       {
-  //         $count: "total",
-  //       },
-  //     ]);
-  //     console.log("đây là data cần tìm", total);
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       data: {
-  //         total: total ? total[0].total : 0,
-  //         docs: result.map((obj) => {
-  //           return {
-  //             name: obj.name,
-  //             email: obj.email,
-  //             phone: obj.phone,
-  //             adress: obj.adress,
-  //           };
-  //         }),
-  //       },
-  //     };
-  //     next();
-  //     // if (total && total[0]) {
 
-  //     // }
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
-  // //hàm thực hiện việc hiển thị khi bấm chuyển tra
-  // search_short = async (req, res, next) => {
-  //   try {
-  //     const { data } = req.params;
-  //     const page = parseInt(req.body.page) || 1;
-  //     const limit = parseInt(req.body.limit) || 10;
-  //     const skip = (page - 1) * limit;
-  //     let result = await this.model
-  //       .find({
-  //         $or: [
-  //           { name: { $regex: data, $options: "i" } },
-  //           { email: { $regex: data, $options: "i" } },
-  //           { phone: { $regex: data, $options: "i" } },
-  //         ],
-  //       })
-  //       .skip(skip)
-  //       .limit(parseInt(limit))
-  //       .lean()
-  //       .populate("resources");
-  //     res.locals.resData = {
-  //       statusCode: 200,
-  //       data: {
-  //         docs: result.map((obj) => {
-  //           return {
-  //             _id: obj._id,
-  //             name: obj.name,
-  //             phone: obj.phone,
-  //             email: obj.email,
-  //             status: obj.status,
-  //           };
-  //         }),
-  //       },
-  //     };
-  //     next();
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
   //tìm user theo id
   getUserById = async (req, res, next) => {
     try {
@@ -237,12 +122,7 @@ class Ctrl extends CoreCtrl {
         req.body;
       // check user exist, check email, name, phone
       const existUser = await this.model.find({
-        $or: [
-          { name: { $regex: name, $options: "i" } },
-          { phone: { $regex: phone, $options: "i" } },
-          { email: { $regex: email, $options: "i" } },
-        ],
-        status: 0,
+        $or: [{ phone }, { email }],
       });
       if (!isEmpty(existUser)) {
         throw {
@@ -250,6 +130,7 @@ class Ctrl extends CoreCtrl {
           message: "Đã tồn tại tài khoản",
         };
       }
+      const currentTime = moment().unix();
       let result = await super.newCreate({
         name,
         phone,
@@ -259,6 +140,8 @@ class Ctrl extends CoreCtrl {
         role,
         imageLink,
         address,
+        updatedTime: currentTime,
+        time: currentTime,
       });
       res.locals.resData = {
         statusCode: 200,
@@ -299,12 +182,7 @@ class Ctrl extends CoreCtrl {
           message: "Không tìm thấy tài khoản",
         };
       }
-      const {
-        name: oldName,
-        phone: oldPhone,
-        gender: oldGender,
-        role: oldRole,
-      } = doctor;
+      const { role: oldRole } = doctor;
       if (role && role != oldRole) {
         if (!req.admin) {
           throw {
@@ -313,12 +191,25 @@ class Ctrl extends CoreCtrl {
           };
         }
       }
+      if (phone != oldPhone) {
+        const existUser = await this.model.find({
+          phone,
+        });
+        if (!isEmpty(existUser)) {
+          throw {
+            statusCode: 400,
+            message: "Đã tồn tại số điện thoại",
+          };
+        }
+      }
+      const currentTime = moment().unix();
       let result = await super.update(id, {
         name,
         phone,
         gender,
         imageLink,
         address,
+        updatedTime: currentTime,
       });
       res.locals.resData = {
         statusCode: 200,
@@ -341,12 +232,50 @@ class Ctrl extends CoreCtrl {
       }
       const { name, phone, gender, imageLink, address } = req.body;
       const { id } = req.user;
+      const currentTime = moment().unix();
+      const formattedId = mongoose.Types.ObjectId(id);
+      let user = await super.getEntry([
+        {
+          $match: {
+            _id: formattedId,
+          },
+        },
+        {
+          $project: {
+            id: "$_id",
+            name: 1,
+            phone: 1,
+            gender: 1,
+            role: 1,
+          },
+        },
+      ]);
+      user = !isEmpty(user) ? user[0] : null;
+      if (!user) {
+        throw {
+          statusCode: 404,
+          message: "Không tìm thấy tài khoản",
+        };
+      }
+      const { phone: oldPhone } = user;
+      if (phone != oldPhone) {
+        const existUser = await this.model.find({
+          phone: phone,
+        });
+        if (!isEmpty(existUser)) {
+          throw {
+            statusCode: 400,
+            message: "Đã tồn tại số điện thoại",
+          };
+        }
+      }
       let result = await super.update(id, {
         name,
         phone,
         gender,
         imageLink,
         address,
+        updatedTime: currentTime,
       });
       res.locals.resData = {
         statusCode: 200,
@@ -361,13 +290,44 @@ class Ctrl extends CoreCtrl {
 
   changePass = async (req, res, next) => {
     try {
-      const { name, password } = req.body;
-
+      const { password, newPassword } = req.body;
       const { id } = req.params;
-      let result = await super.update(id, { name, password });
+      const hashFn = hash.createHashPasswordFn(
+        saltLength,
+        iterations,
+        keylength,
+        digest
+      );
+      const user = await Users.findOne({ _id: id });
+      const passHash = await hashFn(newPassword);
+      const passIsValid = await hash.isPasswordCorrect(
+        {
+          hash: user.password,
+          salt: user.salt,
+          iterations,
+          keylength,
+          digest,
+        },
+        password
+      );
+
+      if (!passIsValid) {
+        throw new Error({
+          statusCode: 401,
+          message: "Mật khẩu không đúng!",
+        });
+      } else {
+        password = newPassword;
+      }
+      // pass
+      const result = await super.update(id, {
+        password: passHash.hash,
+        salt: passHash.salt,
+      });
+
       res.locals.resData = {
         statusCode: 200,
-        message: "success",
+        message: "Đổi mật khẩu thành công",
         data: result,
       };
       next();
@@ -379,11 +339,20 @@ class Ctrl extends CoreCtrl {
   delete = async (req, res, next) => {
     try {
       const { id } = req.params;
-      console.log("hahah", id);
-      let result = await super.delete(id);
+      const currentTime = moment().unix();
+      if (!req.admin) {
+        throw {
+          statusCode: 404,
+          message: "Không có quyền truy cập",
+        };
+      }
+      let result = await super.update(id, {
+        status: userService.STATUS_DISABLED,
+        updatedTime: currentTime,
+      });
       res.locals.resData = {
         statusCode: 200,
-        message: "success",
+        message: "Xóa tài khoản thành công",
         data: {
           id: result._id,
         },
