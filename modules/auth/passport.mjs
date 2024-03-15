@@ -53,13 +53,22 @@ export default {
         }
 
         // Forward user information to the next middleware
-        const { role } = user;
+        const { role, _id: id } = user;
         if (role == userService.ROLE_ADMIN) {
-          req.admin = user;
+          req.admin = {
+            ...user,
+            id,
+          };
         } else if (role == userService.ROLE_DOCTOR) {
-          req.doctor = user;
+          req.doctor = {
+            ...user,
+            id,
+          };
         } else if (role == userService.ROLE_PATIENT) {
-          req.patient = user;
+          req.patient = {
+            ...user,
+            id,
+          };
         }
         next();
       }
