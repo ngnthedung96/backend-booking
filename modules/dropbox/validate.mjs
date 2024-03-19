@@ -7,6 +7,13 @@ const dropboxService = new DropboxSvc();
 const validate = (method) => {
   let err = [];
   switch (method) {
+    case "authorizeDropbox":
+      {
+        err = [
+          body("code", "Authorized Code không hợp lệ").notEmpty().isString(),
+        ];
+      }
+      break;
     case "create":
       {
         err = [

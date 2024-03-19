@@ -37,11 +37,31 @@ class Ctrl extends CoreCtrl {
     }
   };
 
+  // hàm này lấy refresh token và token
+  authorizeDropbox = async (req, res, next) => {
+    try {
+      const { code } = req.body;
+      const urlAuthCode = await dropboxService.getRefreshToken(code);
+      if (!urlAuthCode.status || !urlAuthCode.data) {
+        throw {
+          statusCode: 400,
+          message: urlAuthCode.message,
+        };
+      }
+      res.locals.resData = {
+        statusCode: 200,
+        message: "Xác thực Dropbox thành công",
+      };
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+
   // hàm này lấy link authorize code
   getUrlAuthCode = async (req, res, next) => {
     try {
       const urlAuthCode = await dropboxService.getAuthUrl();
-      console.log(urlAuthCode);
       if (!urlAuthCode.status || !urlAuthCode.data) {
         throw {
           statusCode: 400,

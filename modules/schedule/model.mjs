@@ -31,6 +31,10 @@ const ScheduleSchema = new Schema(
       type: Number,
       default: 0,
     },
+    updatedTime: {
+      type: Number,
+      default: 0,
+    },
     orders: {
       type: Number,
       default: 0,
@@ -48,7 +52,68 @@ const ScheduleSchema = new Schema(
     toObject: { virtuals: true },
   }
 );
-
+ScheduleSchema.statics.checkExistSchedule = async function (
+  timeStart,
+  timeEnd,
+  doctorId
+) {
+  const existSchedule = await this.model.find({
+    doctorId,
+    $or: [
+      {
+        timeStart: {
+          $and: [
+            {
+              $lt: timeStart,
+            },
+            {
+              $lt: timeEnd,
+            },
+          ],
+        },
+      },
+      {
+        timeEnd: {
+          $and: [
+            {
+              $lt: timeStart,
+            },
+            {
+              $lt: timeEnd,
+            },
+          ],
+        },
+      },
+      {
+        timeEnd: {
+          $and: [
+            {
+              $lt: timeStart,
+            },
+            {
+              $lt: timeEnd,
+            },
+          ],
+        },
+      },
+      {
+        $and: [
+          {
+            timeStart: {
+              $lt: timeStart,
+            },
+          },
+          {
+            timeEnd: {
+              $gt: timeEnd,
+            },
+          },
+        ],
+      },
+    ],
+  });
+  return existSchedule;
+};
 ScheduleSchema.plugin(mongoPagination);
 ScheduleSchema.set("toJSON", { getters: true });
 export default mongoConnect.model("schedules", ScheduleSchema);

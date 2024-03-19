@@ -182,7 +182,6 @@ class Ctrl extends CoreCtrl {
         };
       }
       const generateCode = defaultService.randomNumber(10000, 99999);
-
       const sendingEmail = await sendMail(
         email,
         "Đặt lại mật khẩu",

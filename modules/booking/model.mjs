@@ -14,13 +14,8 @@ const BookingSchema = new Schema(
     patientId: {
       type: Schema.Types.ObjectId,
     },
-    timeStart: {
-      type: Number,
-      default: 0,
-    },
-    timeEnd: {
-      type: Number,
-      default: 0,
+    sheduleId: {
+      type: Schema.Types.ObjectId,
     },
     timeCreate: {
       type: Number,

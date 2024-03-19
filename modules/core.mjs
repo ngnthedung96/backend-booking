@@ -64,6 +64,10 @@ export default class CoreCtrl {
     let result = await this.model.aggregatePaginate(myAggregate, options);
     return result;
   }
+  async getObj(objCondition) {
+    let result = await this.model.findOne(objCondition);
+    return result;
+  }
   async getEntry(aggregateOpt) {
     let result = await this.model.aggregate(aggregateOpt);
     return result;

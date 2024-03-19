@@ -6,8 +6,15 @@ import validate from "../validate";
 
 const router = express.Router();
 
-router.get("/get-list", Ctrl.getList);
-router.get("/get-url-auth-code", Ctrl.getUrlAuthCode);
+router.get("/get-list", passport.authenticate, Ctrl.getList);
+router.get("/get-url-auth-code", passport.authenticate, Ctrl.getUrlAuthCode);
+router.post(
+  "/authorize-dropbox",
+  checkValid("authorizeDropbox"),
+  validate,
+  passport.authenticate,
+  Ctrl.authorizeDropbox
+);
 router.post(
   "/create",
   passport.authenticate,
