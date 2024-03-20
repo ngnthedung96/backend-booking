@@ -24,6 +24,10 @@ const ClinicSchema = new Schema(
       type: String,
       default: "",
     },
+    updatedTime: {
+      type: Number,
+      default: 0,
+    },
     time: {
       type: Number,
       default: 0,

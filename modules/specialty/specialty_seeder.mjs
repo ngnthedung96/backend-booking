@@ -6,6 +6,8 @@ for (let i = 0; i < 15; i++) {
     name: faker.lorem.text(),
     description: faker.lorem.text(),
     imageLink: faker.lorem.text(),
+    time: moment().unix(),
+    updatedTime: moment().unix(),
     status: faker.number.int({ min: 0, max: 1 }),
     orders: faker.number.int({ min: 0, max: 1 }),
   });

@@ -17,6 +17,10 @@ const DoctorClinicSpecialtySchema = new Schema(
     specialtyId: {
       type: Schema.Types.ObjectId,
     },
+    updatedTime: {
+      type: Number,
+      default: 0,
+    },
     time: {
       type: Number,
       default: 0,

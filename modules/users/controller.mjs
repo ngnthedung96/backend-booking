@@ -16,11 +16,21 @@ class Ctrl extends CoreCtrl {
       let { page, limit, dateRange, search } = req.query;
       const formattedLimit = Number(limit);
       const formattedPage = Number(page);
-      const objCondition = {};
-      if (mongoose.Types.ObjectId.isValid(search)) {
-        objCondition._id = mongoose.Types.ObjectId(search);
-      }
-      if (dateRange) {
+      let objCondition = {};
+      if (search) {
+        if (mongoose.Types.ObjectId.isValid(search)) {
+          objCondition._id = mongoose.Types.ObjectId(search);
+        } else {
+          objCondition = {
+            ...objCondition,
+            $or: [
+              { name: { $regex: ".*" + search + ".*", $options: "i" } },
+              { phone: { $regex: ".*" + search + ".*", $options: "i" } },
+              { email: { $regex: ".*" + search + ".*", $options: "i" } },
+            ],
+          };
+        }
+      } else if (dateRange) {
         const dateArr = dateRange.split("-");
         const startDate = dateArr[0];
         const formattedStartDate = moment(startDate, "DD/MM/YYYY")
@@ -70,6 +80,7 @@ class Ctrl extends CoreCtrl {
             pages: result.pages,
             docs: result.docs,
           },
+          message: "Thành công",
         };
       } else {
         throw {

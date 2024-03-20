@@ -40,6 +40,7 @@ export default async function seedDB(mongoClient, dbName, collectionName) {
             timeStart: moment().unix(),
             timeEnd: moment().add(1, "M").unix(),
             timeCreate: moment().unix(),
+            updatedTime: moment().unix(),
             status: faker.number.int({ min: 0, max: 1 }),
             orders: faker.number.int({ min: 0, max: 1 }),
           });
