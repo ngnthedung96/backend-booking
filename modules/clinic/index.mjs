@@ -14,7 +14,7 @@ router.put(
   validate,
   ClinicCtrl.updateClinicIn4
 ); //update clinic
-router.delete("/delete/:id", ClinicCtrl.delete); // delete clinic
+router.delete("/delete/:id", passport.authenticate, ClinicCtrl.delete); // delete clinic
 router.post(
   "/create",
   passport.authenticate,

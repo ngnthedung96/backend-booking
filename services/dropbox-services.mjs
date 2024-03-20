@@ -14,7 +14,7 @@ class DropboxService extends DefaultSvc {
   }
   async getAuthUrl() {
     try {
-      let dropboxAcc = await DropboxDb.findOne({
+      const dropboxAcc = await DropboxDb.findOne({
         status: this.STATUS_WORKING,
       });
       if (isEmpty(dropboxAcc)) {
@@ -23,7 +23,6 @@ class DropboxService extends DefaultSvc {
           message: "Không tìm thấy tài khoản Dropbox hoạt động",
         };
       }
-      dropboxAcc = dropboxAcc ? dropboxAcc[0] : null;
       return {
         status: true,
         data: `https://www.dropbox.com/oauth2/authorize?client_id=${dropboxAcc.clientId}&token_access_type=offline&response_type=code&redirect_uri=${process.env.APP_FRONT_URL}`,
@@ -86,7 +85,6 @@ class DropboxService extends DefaultSvc {
       dropboxAcc.expiredTime = currentTime + expiresIn;
       dropboxAcc.refreshToken = refreshToken;
       const saveDropbox = await dropboxAcc.save();
-      console.log(saveDropbox, 123123);
       if (!saveDropbox) {
         return {
           status: false,
@@ -116,8 +114,8 @@ class DropboxService extends DefaultSvc {
         status: this.STATUS_WORKING,
       });
       if (isEmpty(dropboxAcc)) {
-        throw {
-          statusCode: 400,
+        return {
+          status: false,
           message: "Không tìm thấy tài khoản Dropbox hoạt động",
         };
       }
@@ -172,9 +170,9 @@ class DropboxService extends DefaultSvc {
         return {
           status: true,
           data: {
-            accessToken: accessToken,
-            expiredTime: currentTime + expiresIn,
-            refreshToken: refreshToken,
+            accessToken,
+            expiredTime,
+            refreshToken,
           },
         };
       }
@@ -184,6 +182,166 @@ class DropboxService extends DefaultSvc {
           status: false,
           message: err.response.data.error,
         };
+      }
+    }
+  }
+  // tải ảnh
+  async uploadFile(accessToken, dataImg, nameImg) {
+    try {
+      let config = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://content.dropboxapi.com/2/files/upload",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Dropbox-API-Arg": `{"autorename":false,"mode":"add","mute":false,"path":"/${process.env.PATH_FOLDER_DROPBOX}/images/${nameImg}","strict_conflict":false}`,
+          "Content-Type": "application/octet-stream",
+        },
+        data: dataImg,
+      };
+      const result = await axios.request(config);
+      if (!result || !result?.data) {
+        return {
+          status: false,
+          message: "Có lỗi khi tải tài liệu",
+        };
+      }
+      const { name, path_lower: pathLower, id } = result.data;
+      return {
+        status: true,
+        data: {
+          name,
+          pathLower,
+          id,
+        },
+      };
+    } catch (err) {
+      if (err.response) {
+        if (err.response.data?.error) {
+          return {
+            status: false,
+            message: err.response.data.error,
+          };
+        } else if (err.response.data) {
+          return {
+            status: false,
+            message: err.response.data,
+          };
+        }
+      }
+    }
+  }
+  // lấy đường dẫn
+  async getPreviewUrlFile(accessToken, path) {
+    try {
+      let data = JSON.stringify({
+        path: path,
+        settings: {
+          access: "viewer",
+          allow_download: true,
+          audience: "public",
+          requested_visibility: "public",
+        },
+      });
+
+      let config = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        data: data,
+      };
+      const result = await axios.request(config);
+      if (!result || !result?.data) {
+        return {
+          status: false,
+          message: "Có lỗi khi tải tài liệu",
+        };
+      }
+      const { url } = result.data;
+      return {
+        status: true,
+        data: url,
+      };
+    } catch (err) {
+      if (err.response) {
+        if (err.response.data?.error) {
+          const errData = err.response.data?.error;
+          const tag = errData[".tag"];
+          if (tag) {
+            return {
+              status: false,
+              message: tag,
+            };
+          } else {
+            return {
+              status: false,
+              message: err.response.data.error,
+            };
+          }
+        } else if (err.response.data) {
+          return {
+            status: false,
+            message: err.response.data,
+          };
+        }
+      }
+    }
+  }
+  // lấy đường dẫn đã lấy
+  async getSharedPreviewUrlFile(accessToken, path) {
+    try {
+      let data = JSON.stringify({
+        path: path,
+      });
+
+      let config = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://api.dropboxapi.com/2/sharing/list_shared_links",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        data: data,
+      };
+      const result = await axios.request(config);
+
+      if (!result || !result?.data) {
+        return {
+          status: false,
+          message: "Có lỗi khi lấy đường dẫn tài liệu",
+        };
+      }
+      const { links } = result.data;
+      if (!Array.isArray(links) || isEmpty(links)) {
+        return {
+          status: false,
+          message: "Có lỗi khi lấy đường dẫn tài liệu",
+        };
+      }
+      const linkData = links[0];
+      const { url } = linkData;
+      return {
+        status: true,
+        data: url,
+      };
+    } catch (err) {
+      if (err.response) {
+        if (err.response.data?.error) {
+          return {
+            status: false,
+            message: err.response.data.error,
+          };
+        } else if (err.response.data) {
+          return {
+            status: false,
+            message: err.response.data,
+          };
+        }
       }
     }
   }

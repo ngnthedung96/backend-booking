@@ -21,8 +21,8 @@ router.put(
   validate,
   UserCtrl.updateUserIn4
 ); //update user
-router.put("/change/:id", UserCtrl.changePass); //change password
-router.delete("/delete/:id", UserCtrl.delete); // delete user
+router.put("/change/:id", passport.authenticate, UserCtrl.changePass); //change password
+router.delete("/delete/:id", passport.authenticate, UserCtrl.delete); // delete user
 router.post(
   "/create",
   passport.authenticate,

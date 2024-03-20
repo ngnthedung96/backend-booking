@@ -1,12 +1,13 @@
-import cors from 'cors';
-import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
+import cors from "cors";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+import fileupload from "express-fileupload";
 
 dotenv.config();
 
 // allow list cors in env (do not remove)
-const LIST_CORS = process.env.LIST_CORS.split(',');
+const LIST_CORS = process.env.LIST_CORS.split(",");
 const corsOptions = {
   credentials: true,
   origin: LIST_CORS,
@@ -26,8 +27,8 @@ const stream = {
 // we already told to the logger that it should print
 // only warning and error messages in production.
 const skip = () => {
-  const env = process.env.NODE_ENV || 'development';
-  return env !== 'development';
+  const env = process.env.NODE_ENV || "development";
+  return env !== "development";
 };
 
 // Build the morgan middleware
@@ -36,12 +37,16 @@ const morganMiddleware = morgan(
   // The message format is made from tokens, and each token is
   // defined inside the Morgan library.
   // You can create your custom token to show what do you want from a request.
-  ':method :url :status :res[content-length] - :response-time ms - done',
+  ":method :url :status :res[content-length] - :response-time ms - done",
   // Options: in this case, I overwrote the stream and the skip logic.
   // See the methods above.
-  { stream, skip },
+  { stream, skip }
 );
-
+// config file upload
+const fileUpload = fileupload({
+  limits: { fileSize: 10000000 },
+  abortOnLimit: true,
+});
 /**
  * customize for more middleware here
  */
@@ -50,4 +55,5 @@ export default {
   cors2: cors(corsOptions),
   cookieParser: cookieParser(),
   morganMiddleware,
+  fileUpload,
 };

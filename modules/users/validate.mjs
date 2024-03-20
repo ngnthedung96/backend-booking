@@ -162,8 +162,9 @@ const validate = (method) => {
           query("search", "Lọc ngày không hợp lệ")
             .if(query("search").exists())
             .isString(),
-          query("dateRange", "Lọc ngày không hợp lệ").custom(
-            async (value, { req }) => {
+          query("dateRange", "Lọc ngày không hợp lệ")
+            .if(query("dateRange").exists())
+            .custom(async (value, { req }) => {
               if (value) {
                 const arrDate = value.split(" - ");
                 const start = moment(arrDate[0], "DD/MM/YYYY", true).isValid();
@@ -172,10 +173,9 @@ const validate = (method) => {
                   throw new Error("Lọc ngày không hợp lệ");
                 }
               } else {
-                return true;
+                throw new Error("Lọc ngày không hợp lệ");
               }
-            }
-          ),
+            }),
           query("page", "Số trang không hợp lệ")
             .notEmpty()
             .isNumeric()

@@ -5,16 +5,16 @@ import checkValid from "./validate";
 import validate from "../validate";
 import SpecialtyCtrl from "./controller.mjs";
 
-router.get("/get-list", checkValid("getList"), validate, SpecialtyCtrl.getList); // get clinic
-router.get("/get-one/:id", SpecialtyCtrl.getSpecialtyById); //get clinic
+router.get("/get-list", checkValid("getList"), validate, SpecialtyCtrl.getList); // get specialty
+router.get("/get-one/:id", SpecialtyCtrl.getSpecialtyById); //get specialty
 router.put(
-  "/edit-clinic/:id",
+  "/edit-specialty/:id",
   passport.authenticate,
   checkValid("update"),
   validate,
   SpecialtyCtrl.updateSpecialtyIn4
-); //update clinic
-router.delete("/delete/:id", SpecialtyCtrl.delete); // delete clinic
+); //update specialty
+router.delete("/delete/:id", passport.authenticate, SpecialtyCtrl.delete); // delete specialty
 router.post(
   "/create",
   passport.authenticate,

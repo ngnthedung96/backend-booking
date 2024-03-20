@@ -3,9 +3,10 @@ import CoreCtrl from "../core.mjs";
 import moment from "moment";
 import mongoose from "mongoose";
 import { isEmpty } from "ramda";
-import { UserSvc } from "../../services/index.mjs";
+import { DropboxSvc, UserSvc } from "../../services/index.mjs";
 // define constant
 const userService = new UserSvc();
+const dropboxService = new DropboxSvc();
 class Ctrl extends CoreCtrl {
   constructor(model) {
     super(model);
@@ -129,8 +130,8 @@ class Ctrl extends CoreCtrl {
           message: "Không có quyền thao tác",
         };
       }
-      const { phone, email, name, password, role, gender, imageLink, address } =
-        req.body;
+
+      const { phone, email, name, password, role, gender, address } = req.body;
       // check user exist, check email, name, phone
       const existUser = await this.model.find({
         $or: [{ phone }, { email }],
@@ -142,6 +143,32 @@ class Ctrl extends CoreCtrl {
         };
       }
       const currentTime = moment().unix();
+      const image = {
+        id: "",
+        previewUrl: "",
+        path: "",
+      };
+      if (req.files) {
+        //  lấy đường dẫn ảnh
+        const { file } = req.files;
+        if (!file) {
+          return {
+            status: false,
+            message: "Chưa có ảnh tải lên",
+          };
+        }
+        const getImgUrl = await userService.getImgUrl(file);
+        if (!getImgUrl.status || !getImgUrl.data) {
+          throw {
+            statusCode: 400,
+            message: getImgUrl.message,
+          };
+        }
+        const { pathLowerImg, idImg, previewUrl } = getImgUrl.data;
+        image.id = idImg;
+        image.previewUrl = previewUrl;
+        image.path = pathLowerImg;
+      }
       let result = await super.newCreate({
         name,
         phone,
@@ -149,10 +176,11 @@ class Ctrl extends CoreCtrl {
         password,
         gender,
         role,
-        imageLink,
+        image,
         address,
         updatedTime: currentTime,
         time: currentTime,
+        status: userService.STATUS_WORKING,
       });
       res.locals.resData = {
         statusCode: 200,

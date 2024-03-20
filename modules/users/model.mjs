@@ -20,9 +20,19 @@ const UserSchema = new Schema(
       type: String,
       default: "",
     },
-    imageLink: {
-      type: String,
-      default: "",
+    image: {
+      id: {
+        type: String,
+        default: "",
+      },
+      previewUrl: {
+        type: String,
+        default: "",
+      },
+      path: {
+        type: String,
+        default: "",
+      },
     },
     gender: {
       type: Number,

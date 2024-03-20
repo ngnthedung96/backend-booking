@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import { isEmpty } from "ramda";
 import { DefaultSvc } from "../../services/index.mjs";
 // define constant
-const DefaultService = new DefaultSvc();
+const defaultService = new DefaultSvc();
 class Ctrl extends CoreCtrl {
   constructor(model) {
     super(model);
@@ -120,6 +120,7 @@ class Ctrl extends CoreCtrl {
         imageLink,
         updatedTime: currentTime,
         time: currentTime,
+        status: defaultService.STATUS_WORKING,
       });
       res.locals.resData = {
         statusCode: 200,
@@ -141,7 +142,7 @@ class Ctrl extends CoreCtrl {
         };
       }
       const { name, description, imageLink } = req.body;
-      const { id } = req.patient;
+      const { id } = req.params;
       const currentTime = moment().unix();
       const formattedId = mongoose.Types.ObjectId(id);
       let result = await super.update(formattedId, {
@@ -172,7 +173,7 @@ class Ctrl extends CoreCtrl {
       const { id } = req.params;
       const currentTime = moment().unix();
       let result = await super.update(id, {
-        status: DefaultService.STATUS_DISABLED,
+        status: defaultService.STATUS_DISABLED,
         updatedTime: currentTime,
       });
       res.locals.resData = {
