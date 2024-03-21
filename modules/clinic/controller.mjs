@@ -54,7 +54,10 @@ class Ctrl extends CoreCtrl {
               id: "$_id",
               name: 1,
               address: 1,
-              description: 1,
+              introduce: 1,
+              strength: 1,
+              equipment: 1,
+              process: 1,
               imageLink: 1,
               status: 1,
               updatedTime: 1,
@@ -113,12 +116,23 @@ class Ctrl extends CoreCtrl {
           message: "Không có quyền thao tác",
         };
       }
-      const { name, address, description, imageLink } = req.body;
+      const {
+        name,
+        introduce,
+        strength,
+        equipment,
+        address,
+        process,
+        imageLink,
+      } = req.body;
       const currentTime = moment().unix();
       let result = await super.newCreate({
         name,
         address,
-        description,
+        introduce,
+        strength,
+        equipment,
+        process,
         imageLink,
         updatedTime: currentTime,
         time: currentTime,
@@ -143,14 +157,26 @@ class Ctrl extends CoreCtrl {
           message: "Không có quyền thao tác",
         };
       }
-      const { name, address, description, imageLink } = req.body;
+      const {
+        name,
+        introduce,
+        strength,
+        equipment,
+        address,
+        process,
+        imageLink,
+      } = req.body;
       const { id } = req.params;
       const currentTime = moment().unix();
       const formattedId = mongoose.Types.ObjectId(id);
       let result = await super.update(formattedId, {
         name,
         address,
-        description,
+        introduce,
+        strength,
+        equipment,
+        address,
+        process,
         imageLink,
         updatedTime: currentTime,
       });

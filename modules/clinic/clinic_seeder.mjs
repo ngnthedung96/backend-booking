@@ -6,7 +6,11 @@ for (let i = 0; i < 15; i++) {
   items.push({
     name: faker.lorem.text(),
     address: faker.lorem.text(),
-    description: faker.lorem.text(),
+    introduce: faker.lorem.text(),
+    strength: faker.lorem.text(),
+    equipment: faker.lorem.text(),
+    address: faker.lorem.text(),
+    process: faker.lorem.text(),
     imageLink: faker.lorem.text(),
     time: moment().unix(),
     status: faker.number.int({ min: 0, max: 1 }),

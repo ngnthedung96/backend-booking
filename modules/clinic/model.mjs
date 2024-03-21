@@ -12,11 +12,23 @@ const ClinicSchema = new Schema(
       type: String,
       default: "",
     },
+    introduce: {
+      type: String,
+      default: "",
+    },
+    strength: {
+      type: String,
+      default: "",
+    },
+    equipment: {
+      type: String,
+      default: "",
+    },
     address: {
       type: String,
       default: "",
     },
-    description: {
+    process: {
       type: String,
       default: "",
     },

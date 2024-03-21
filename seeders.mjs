@@ -14,11 +14,11 @@ const mongoClient = new mongoose.mongo.MongoClient(process.env.CONNECT_STRING, {
 
 (async function () {
   await mongoClient.connect();
-  await userSeeder(mongoClient, "booking-care", "users");
-  await specialtySeeder(mongoClient, "booking-care", "specialties");
+  // await userSeeder(mongoClient, "booking-care", "users");
+  // await specialtySeeder(mongoClient, "booking-care", "specialties");
   await clinicSeeder(mongoClient, "booking-care", "clinics");
-  bookingSeeder(mongoClient, "booking-care", "bookings");
-  scheduleSeeder(mongoClient, "booking-care", "schedules");
-  doctorClinicSeeder(mongoClient, "booking-care", "doctor-clinic");
+  // bookingSeeder(mongoClient, "booking-care", "bookings");
+  // scheduleSeeder(mongoClient, "booking-care", "schedules");
+  // doctorClinicSeeder(mongoClient, "booking-care", "doctor-clinic");
   // await mongoClient.close();
 })();
