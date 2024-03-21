@@ -30,7 +30,6 @@ export default class CoreCtrl {
 
   async createMany(data) {
     const result = await this.model.insertMany(data);
-    console.log("Create Many result: ", result);
     return result;
   }
 

@@ -8,7 +8,10 @@ const validate = (method) => {
       {
         err = [
           body("name", "Tên không hợp lệ").notEmpty(),
-          body("description", "Mô tả không hợp lệ").notEmpty(),
+          body("introduce", "Giới thiệu không hợp lệ").notEmpty(),
+          body("strength", "Thế mạnh chuyên môn không hợp lệ").notEmpty(),
+          body("equipment", "Trang thiết bị không hợp lệ").notEmpty(),
+          body("process", "Quy trình khám bệnh không hợp lệ").notEmpty(),
           body("address", "Địa chỉ không hợp lệ").notEmpty(),
         ];
       }
@@ -18,7 +21,10 @@ const validate = (method) => {
       {
         err = [
           body("name", "Tên không hợp lệ").notEmpty(),
-          body("description", "Mô tả không hợp lệ").notEmpty(),
+          body("introduce", "Giới thiệu không hợp lệ").notEmpty(),
+          body("strength", "Thế mạnh chuyên môn không hợp lệ").notEmpty(),
+          body("equipment", "Trang thiết bị không hợp lệ").notEmpty(),
+          body("process", "Quy trình khám bệnh không hợp lệ").notEmpty(),
           body("address", "Địa chỉ không hợp lệ").notEmpty(),
           param("id", "Id không hợp lệ").custom((value) => {
             if (mongoose.Types.ObjectId.isValid(value)) {

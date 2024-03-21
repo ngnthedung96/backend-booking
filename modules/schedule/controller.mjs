@@ -3,6 +3,7 @@ import CoreCtrl from "../core.mjs";
 import moment from "moment";
 import mongoose from "mongoose";
 import { DefaultSvc, ScheduleSvc } from "../../services/index.mjs";
+import { isEmpty } from "ramda";
 // define constant
 const defaultService = new DefaultSvc();
 const scheduleService = new ScheduleSvc();
@@ -10,7 +11,7 @@ class Ctrl extends CoreCtrl {
   constructor(model) {
     super(model);
   }
-  // hàm này thực hiện lấy ra toàn bộ list Dropbox
+  // hàm này thực hiện lấy ra toàn bộ list schedule
   getList = async (req, res, next) => {
     try {
       const { page, limit } = req.query;
@@ -36,7 +37,7 @@ class Ctrl extends CoreCtrl {
     }
   };
 
-  // hàm thực hiện việc thêm mới Dropbox
+  // hàm thực hiện việc thêm mới schedule
   create = async (req, res, next) => {
     try {
       if (!req.admin) {
@@ -45,44 +46,46 @@ class Ctrl extends CoreCtrl {
           message: "Không có quyền thao tác",
         };
       }
-      const { doctorId, scheduleData } = req.body;
-      for (let schedule of scheduleData) {
-        const { maxNumber, timeStart, timeEnd, typeRepeat } = schedule;
-        const currentTime = moment().unix();
-        const formattedDoctorId = mongoose.Types.ObjectId(doctorId);
-        const existSchedule = await this.model.checkExistSchedule(
-          timeStart,
-          timeEnd,
-          formattedDoctorId
-        );
-        if (!isEmpty(existSchedule)) {
-          throw {
-            statusCode: 400,
-            message: "Lịch được tạo đã trùng với lịch đã được tạo",
-          };
-        }
-        let arrData = [
-          {
-            maxNumber,
-            doctorId,
+      const { doctorId, scheduleData, month } = req.body;
+      const currentYear = moment().year();
+      const getArrData = scheduleService.formatDaySchedule(
+        scheduleData,
+        doctorId,
+        currentYear,
+        month
+      );
+      if (!getArrData.status || !getArrData.data) {
+        throw {
+          statusCode: 400,
+          message: getArrData.message,
+        };
+      }
+      const { data: arrData } = getArrData;
+      const allPromise = [];
+      for (let data of arrData) {
+        const findPromise = new Promise(async (resolve, reject) => {
+          const { timeStart, timeEnd, doctorId } = data;
+          const existSchedule = await this.model.checkExistSchedule(
             timeStart,
             timeEnd,
-            timeCreate: currentTime,
-            updatedTime: currentTime,
-            status: defaultService.STATUS_WORKING,
-          },
-        ];
-        if (typeRepeat == scheduleService.REPEATE_ALL_DAY) {
-          arrData;
-        } else if (typeRepeat == scheduleService.REPEATE_DAYS_AT_WEEKEND) {
-          arrData;
-        } else if (typeRepeat == scheduleService.REPEATE_DAYS_IN_WEEK) {
-          arrData;
-        } else if (typeRepeat == scheduleService.REPEATE_SOME_DAYS) {
-          arrData;
-        }
-        const result = await super.createMany(arrData);
+            doctorId
+          );
+          if (existSchedule) {
+            reject(
+              new Error(
+                `Lịch được tạo đã trùng với lịch đã được tạo! Vào ${moment
+                  .unix(timeStart)
+                  .format("HH:mm DD/MM/YYYY")}`
+              )
+            );
+          }
+          resolve();
+        });
+        allPromise.push(findPromise);
       }
+      const checkAll = await Promise.all(allPromise);
+
+      const result = await super.createMany(arrData);
       res.locals.resData = {
         statusCode: 200,
         message: "Tạo lịch thành công",
@@ -107,7 +110,7 @@ class Ctrl extends CoreCtrl {
       const { id } = req.params;
       const formattedId = mongoose.Types.ObjectId(id);
       const currentTime = moment().unix();
-      let dropboxAcc = await super.getEntry([
+      let scheduleAcc = await super.getEntry([
         {
           $match: {
             _id: formattedId,
@@ -121,8 +124,8 @@ class Ctrl extends CoreCtrl {
           },
         },
       ]);
-      dropboxAcc = !isEmpty(dropboxAcc) ? dropboxAcc[0] : null;
-      if (!dropboxAcc) {
+      scheduleAcc = !isEmpty(scheduleAcc) ? scheduleAcc[0] : null;
+      if (!scheduleAcc) {
         throw {
           statusCode: 404,
           message: "Không tìm thấy tài khoản",
@@ -132,7 +135,7 @@ class Ctrl extends CoreCtrl {
         clientId: oldClientId,
         clientSecret: oldClientSecret,
         note: oldNote,
-      } = dropboxAcc;
+      } = scheduleAcc;
       if (clientId != oldClientId) {
         const existUser = await this.model.find({
           clientId: clientId,
@@ -161,10 +164,10 @@ class Ctrl extends CoreCtrl {
             _id: {
               $ne: formattedId,
             },
-            status: dropboxService.STATUS_WORKING,
+            status: scheduleService.STATUS_WORKING,
           },
           {
-            status: dropboxService.STATUS_DISABLED,
+            status: scheduleService.STATUS_DISABLED,
           },
           { useFindAndModify: false }
         );
@@ -175,8 +178,8 @@ class Ctrl extends CoreCtrl {
         note,
         updatedTime: currentTime,
         status: isDefault
-          ? dropboxService.STATUS_WORKING
-          : dropboxService.STATUS_DISABLED,
+          ? scheduleService.STATUS_WORKING
+          : scheduleService.STATUS_DISABLED,
       });
       res.locals.resData = {
         statusCode: 200,
@@ -189,7 +192,7 @@ class Ctrl extends CoreCtrl {
     }
   };
 
-  // hàm thực hiện xóa Dropbox
+  // hàm thực hiện xóa schedule
   delete = async (req, res, next) => {
     try {
       if (!req.admin) {

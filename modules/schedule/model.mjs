@@ -57,55 +57,31 @@ ScheduleSchema.statics.checkExistSchedule = async function (
   timeEnd,
   doctorId
 ) {
-  const existSchedule = await this.model.find({
+  const existSchedule = await this.findOne({
     doctorId,
     $or: [
       {
         timeStart: {
-          $and: [
-            {
-              $lt: timeStart,
-            },
-            {
-              $lt: timeEnd,
-            },
-          ],
+          $gt: timeStart,
+          $lt: timeEnd,
         },
       },
       {
         timeEnd: {
-          $and: [
-            {
-              $lt: timeStart,
-            },
-            {
-              $lt: timeEnd,
-            },
-          ],
-        },
-      },
-      {
-        timeEnd: {
-          $and: [
-            {
-              $lt: timeStart,
-            },
-            {
-              $lt: timeEnd,
-            },
-          ],
+          $gt: timeStart,
+          $lt: timeEnd,
         },
       },
       {
         $and: [
           {
             timeStart: {
-              $lt: timeStart,
+              $lte: timeStart,
             },
           },
           {
             timeEnd: {
-              $gt: timeEnd,
+              $gte: timeEnd,
             },
           },
         ],

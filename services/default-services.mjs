@@ -16,20 +16,8 @@ class DefaultService {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
   validateHhMm(inputField) {
-    var isValid = /^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$/.test(
-      inputField.value
-    );
-    if (isValid) {
-      return {
-        status: true,
-      };
-    } else {
-      return {
-        status: false,
-      };
-    }
-
-    return isValid;
+    const day = moment(inputField, "HH:mm", true).isValid();
+    return day;
   }
 }
 export default DefaultService;
