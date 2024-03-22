@@ -155,7 +155,8 @@ const validate = (method) => {
         ];
       }
       break;
-    //get list
+    //get
+
     case "getList":
       {
         err = [
@@ -193,6 +194,145 @@ const validate = (method) => {
                 throw new Error("Giới hạn không hợp lệ không hợp lệ");
               }
               return true;
+            }),
+        ];
+      }
+      break;
+    case "getListDoctor":
+      {
+        err = [
+          query("isSpecialty", "Hiển thị chuyên khoa không hợp lệ")
+            .if(query("isSpecialty").exists())
+            .isNumeric()
+            .custom(async (value, { req }) => {
+              if (
+                value != userService.STATUS_WORKING &&
+                value != userService.STATUS_DISABLED
+              ) {
+                throw new Error("Hiển thị chuyên khoa không hợp lệ");
+              }
+            }),
+          query("isSchedule", "Hiển thị lịch khám không hợp lệ")
+            .if(query("isSchedule").exists())
+            .isNumeric()
+            .custom(async (value, { req }) => {
+              if (
+                value != userService.STATUS_WORKING &&
+                value != userService.STATUS_DISABLED
+              ) {
+                throw new Error("Hiển thị lịch khám không hợp lệ");
+              }
+            }),
+          query("isClinic", "Hiển thị cơ sở y tế không hợp lệ")
+            .if(query("isClinic").exists())
+            .isNumeric()
+            .custom(async (value, { req }) => {
+              if (
+                value != userService.STATUS_WORKING &&
+                value != userService.STATUS_DISABLED
+              ) {
+                throw new Error("Hiển thị cơ sở y tế không hợp lệ");
+              }
+            }),
+          query("search", "Lọc ngày không hợp lệ")
+            .if(query("search").exists())
+            .isString(),
+          query("dateRange", "Lọc ngày không hợp lệ")
+            .if(query("dateRange").exists())
+            .custom(async (value, { req }) => {
+              if (value) {
+                const arrDate = value.split(" - ");
+                const start = moment(arrDate[0], "DD/MM/YYYY", true).isValid();
+                const end = moment(arrDate[1], "DD/MM/YYYY", true).isValid();
+                if (!start || !end) {
+                  throw new Error("Lọc ngày không hợp lệ");
+                }
+              } else {
+                throw new Error("Lọc ngày không hợp lệ");
+              }
+            }),
+          query("page", "Số trang không hợp lệ")
+            .notEmpty()
+            .isNumeric()
+            .custom(async (value, { req }) => {
+              if (!Number(value) || Number(value) <= 0) {
+                throw new Error("Số trang không hợp lệ");
+              }
+              return true;
+            }),
+          query("limit", "Giới hạn không hợp lệ")
+            .notEmpty()
+            .isNumeric()
+            .custom(async (value, { req }) => {
+              if (!Number(value) || Number(value) <= 0) {
+                throw new Error("Giới hạn không hợp lệ không hợp lệ");
+              }
+              return true;
+            }),
+        ];
+      }
+      break;
+    case "getDoctor":
+      {
+        err = [
+          param("id", "Id không hợp lệ").custom((value) => {
+            if (mongoose.Types.ObjectId.isValid(value)) {
+              return Users.findById(value)
+                .exec()
+                .then((obj) => {
+                  if (!obj) {
+                    return Promise.reject("Object not found");
+                  }
+                });
+            } else {
+              throw new Error(
+                "Id must be a string of 12 bytes or a string of 24 hex characters or an integer"
+              );
+            }
+          }),
+          query("isSpecialty", "Hiển thị chuyên khoa không hợp lệ")
+            .if(query("isSpecialty").exists())
+            .isNumeric()
+            .custom(async (value, { req }) => {
+              if (
+                value != userService.STATUS_WORKING &&
+                value != userService.STATUS_DISABLED
+              ) {
+                throw new Error("Hiển thị chuyên khoa không hợp lệ");
+              }
+            }),
+          query("isSchedule", "Hiển thị lịch khám không hợp lệ")
+            .if(query("isSchedule").exists())
+            .isNumeric()
+            .custom(async (value, { req }) => {
+              if (
+                value != userService.STATUS_WORKING &&
+                value != userService.STATUS_DISABLED
+              ) {
+                throw new Error("Hiển thị lịch khám không hợp lệ");
+              }
+            }),
+          query("isClinic", "Hiển thị cơ sở y tế không hợp lệ")
+            .if(query("isClinic").exists())
+            .isNumeric()
+            .custom(async (value, { req }) => {
+              if (
+                value != userService.STATUS_WORKING &&
+                value != userService.STATUS_DISABLED
+              ) {
+                throw new Error("Hiển thị cơ sở y tế không hợp lệ");
+              }
+            }),
+          query("isMarkdown", "Hiển thị mô tả không hợp lệ")
+            .if(query("isMarkdown").exists())
+            .isNumeric()
+            .custom(async (value, { req }) => {
+              if (
+                value != userService.STATUS_WORKING &&
+                value != userService.STATUS_DISABLED
+              ) {
+                throw new Error("Hiển thị mô tả không hợp lệ");
+              }
             }),
         ];
       }

@@ -3,20 +3,30 @@ import CoreCtrl from "../core.mjs";
 import moment from "moment";
 import mongoose from "mongoose";
 import { isEmpty } from "ramda";
-import { DefaultSvc } from "../../services/index.mjs";
+import { DefaultSvc, ImageDropboxSvc } from "../../services/index.mjs";
+
 // define constant
 const defaultService = new DefaultSvc();
+const imageDropboxService = new ImageDropboxSvc();
 class Ctrl extends CoreCtrl {
   constructor(model) {
     super(model);
   }
   // //lấy toàn bộ specialty ra
-  getList = async (req, res, next) => {
+  getListSpecialty = async (req, res, next) => {
     try {
-      let { page, limit, dateRange, search } = req.query;
+      let {
+        page,
+        limit,
+        dateRange,
+        search,
+        isSpecialty,
+        isClinic,
+        isSchedule,
+      } = req.query;
       const formattedLimit = Number(limit);
       const formattedPage = Number(page);
-      const objCondition = {};
+      let objCondition = {};
       if (search) {
         if (mongoose.Types.ObjectId.isValid(search)) {
           objCondition._id = mongoose.Types.ObjectId(search);
@@ -25,7 +35,8 @@ class Ctrl extends CoreCtrl {
             ...objCondition,
             $or: [
               { name: { $regex: ".*" + search + ".*", $options: "i" } },
-              { description: { $regex: ".*" + search + ".*", $options: "i" } },
+              { phone: { $regex: ".*" + search + ".*", $options: "i" } },
+              { email: { $regex: ".*" + search + ".*", $options: "i" } },
             ],
           };
         }
@@ -44,28 +55,110 @@ class Ctrl extends CoreCtrl {
           $lt: formattedEndDate,
         };
       }
-      let result = await super.getPagination(
-        [
-          {
-            $match: objCondition,
+      const aggregation = [
+        {
+          $match: objCondition,
+        },
+        {
+          $project: {
+            id: "$_id",
+            name: 1,
+            description: 1,
+            image: 1,
+            updatedTime: 1,
+            time: 1,
           },
+        },
+      ];
+      if (isSpecialty || isClinic) {
+        const pipelineLookup = [
           {
             $project: {
               id: "$_id",
-              name: 1,
-              description: 1,
-              imageLink: 1,
-              status: 1,
-              updatedTime: 1,
+              doctorId: 1,
+              clinicId: 1,
+              specialtyId: 1,
             },
           },
-          { $sort: { id: -1 } },
-        ],
-        {
-          limit: formattedLimit,
-          page: formattedPage,
+        ];
+        aggregation.push({
+          $lookup: {
+            from: "doctor-clinic-specialty",
+            localField: "_id",
+            foreignField: "specialtyId",
+            as: "doctorClinicSpecialty",
+            pipeline: pipelineLookup,
+          },
+        });
+        if (isDoctor) {
+          const pipelineDoctor = [
+            {
+              $project: {
+                id: "$_id",
+                name: 1,
+                image: 1,
+                position: 1,
+              },
+            },
+          ];
+          pipelineLookup.push({
+            $lookup: {
+              from: "doctors",
+              localField: "doctorId",
+              foreignField: "_id",
+              as: "doctors",
+              pipeline: pipelineDoctor,
+            },
+          });
+          if (isSchedule) {
+            pipelineDoctor.push({
+              $lookup: {
+                from: "schedules",
+                localField: "_id",
+                foreignField: "doctorId",
+                as: "schedules",
+                pipeline: [
+                  {
+                    $project: {
+                      id: "$_id",
+                      currentNumber: 1,
+                      maxNumber: 1,
+                      doctorId: 1,
+                      timeStart: 1,
+                      timeEnd: 1,
+                    },
+                  },
+                ],
+              },
+            });
+          }
         }
-      );
+        if (isClinic) {
+          pipelineLookup.push({
+            $lookup: {
+              from: "clinics",
+              localField: "clinicId",
+              foreignField: "_id",
+              as: "clinics",
+              pipeline: [
+                {
+                  $project: {
+                    id: "$_id",
+                    name: 1,
+                    description: 1,
+                    imageLink: 1,
+                  },
+                },
+              ],
+            },
+          });
+        }
+      }
+
+      let result = await super.getPagination(aggregation, {
+        limit: formattedLimit,
+        page: formattedPage,
+      });
       if (!isEmpty(result)) {
         res.locals.resData = {
           statusCode: 200,
@@ -87,18 +180,147 @@ class Ctrl extends CoreCtrl {
       next(err);
     }
   };
-
   //tìm specialty theo id
   getSpecialtyById = async (req, res, next) => {
     try {
+      let { isSpecialty, isClinic, isSchedule, isMarkdown } = req.query;
       const id = req.params.id;
-      let result = await Specialties.findById(id);
-      res.locals.resData = {
-        statusCode: 200,
-        message: "Thành công",
-        data: result,
+      const formattedId = mongoose.Types.ObjectId(id);
+      let objCondition = {
+        _id: formattedId,
       };
-      next();
+      const aggregation = [
+        {
+          $match: objCondition,
+        },
+        {
+          $project: {
+            id: "$_id",
+            name: 1,
+            description: 1,
+            image: 1,
+            updatedTime: 1,
+            time: 1,
+          },
+        },
+      ];
+      if (isSpecialty || isClinic) {
+        const pipelineLookup = [
+          {
+            $project: {
+              id: "$_id",
+              doctorId: 1,
+              clinicId: 1,
+              specialtyId: 1,
+            },
+          },
+        ];
+        aggregation.push({
+          $lookup: {
+            from: "doctor-clinic-specialty",
+            localField: "_id",
+            foreignField: "specialtyId",
+            as: "doctorClinicSpecialty",
+            pipeline: pipelineLookup,
+          },
+        });
+        if (isDoctor) {
+          const pipelineDoctor = [
+            {
+              $project: {
+                id: "$_id",
+                name: 1,
+                image: 1,
+                position: 1,
+              },
+            },
+          ];
+          pipelineLookup.push({
+            $lookup: {
+              from: "doctors",
+              localField: "doctorId",
+              foreignField: "_id",
+              as: "doctors",
+              pipeline: pipelineDoctor,
+            },
+          });
+          if (isSchedule) {
+            pipelineDoctor.push({
+              $lookup: {
+                from: "schedules",
+                localField: "_id",
+                foreignField: "doctorId",
+                as: "schedules",
+                pipeline: [
+                  {
+                    $project: {
+                      id: "$_id",
+                      currentNumber: 1,
+                      maxNumber: 1,
+                      doctorId: 1,
+                      timeStart: 1,
+                      timeEnd: 1,
+                    },
+                  },
+                ],
+              },
+            });
+          }
+        }
+        if (isClinic) {
+          pipelineLookup.push({
+            $lookup: {
+              from: "clinics",
+              localField: "clinicId",
+              foreignField: "_id",
+              as: "clinics",
+              pipeline: [
+                {
+                  $project: {
+                    id: "$_id",
+                    name: 1,
+                    description: 1,
+                    imageLink: 1,
+                  },
+                },
+              ],
+            },
+          });
+        }
+      }
+      if (isMarkdown) {
+        aggregation.push({
+          $lookup: {
+            from: "markdowns",
+            localField: "_id",
+            foreignField: "specialtyId",
+            as: "markdowns",
+            pipeline: [
+              {
+                $project: {
+                  id: "$_id",
+                  intro: 1,
+                  content: 1,
+                },
+              },
+            ],
+          },
+        });
+      }
+      let result = await super.getEntry(aggregation);
+      if (!isEmpty(result)) {
+        res.locals.resData = {
+          statusCode: 200,
+          message: "success",
+          data: result,
+        };
+        next();
+      } else {
+        throw {
+          statusCode: 400,
+          message: "Không tìm thấy bác sĩ",
+        };
+      }
     } catch (err) {
       next(err);
     }
@@ -112,12 +334,38 @@ class Ctrl extends CoreCtrl {
           message: "Không có quyền thao tác",
         };
       }
-      const { name, description, imageLink } = req.body;
+      const { name, description } = req.body;
       const currentTime = moment().unix();
+      const image = {
+        id: "",
+        previewUrl: "",
+        path: "",
+      };
+      if (req.files) {
+        //  lấy đường dẫn ảnh
+        const { file } = req.files;
+        if (!file) {
+          return {
+            status: false,
+            message: "Chưa có ảnh tải lên",
+          };
+        }
+        const getImgUrl = await imageDropboxService.getImgUrl(file);
+        if (!getImgUrl.status || !getImgUrl.data) {
+          throw {
+            statusCode: 400,
+            message: getImgUrl.message,
+          };
+        }
+        const { pathLowerImg, idImg, previewUrl } = getImgUrl.data;
+        image.id = idImg;
+        image.previewUrl = previewUrl;
+        image.path = pathLowerImg;
+      }
       let result = await super.newCreate({
         name,
         description,
-        imageLink,
+        image,
         updatedTime: currentTime,
         time: currentTime,
         status: defaultService.STATUS_WORKING,
@@ -141,14 +389,40 @@ class Ctrl extends CoreCtrl {
           message: "Không có quyền thao tác",
         };
       }
-      const { name, description, imageLink } = req.body;
+      const { name, description } = req.body;
       const { id } = req.params;
       const currentTime = moment().unix();
       const formattedId = mongoose.Types.ObjectId(id);
+      const image = {
+        id: "",
+        previewUrl: "",
+        path: "",
+      };
+      if (req.files) {
+        //  lấy đường dẫn ảnh
+        const { file } = req.files;
+        if (!file) {
+          return {
+            status: false,
+            message: "Chưa có ảnh tải lên",
+          };
+        }
+        const getImgUrl = await imageDropboxService.getImgUrl(file);
+        if (!getImgUrl.status || !getImgUrl.data) {
+          throw {
+            statusCode: 400,
+            message: getImgUrl.message,
+          };
+        }
+        const { pathLowerImg, idImg, previewUrl } = getImgUrl.data;
+        image.id = idImg;
+        image.previewUrl = previewUrl;
+        image.path = pathLowerImg;
+      }
       let result = await super.update(formattedId, {
         name,
         description,
-        imageLink,
+        image,
         updatedTime: currentTime,
       });
       res.locals.resData = {

@@ -5,8 +5,14 @@ import checkValid from "./validate";
 import validate from "../validate";
 import UserCtrl from "./controller.mjs";
 
-router.get("/get-list", checkValid("getList"), validate, UserCtrl.getList); // get user
-router.get("/get-one/:id", UserCtrl.getUserById); //get user
+// --------------------doctor----------------------
+router.get("/get-doctor/:id", UserCtrl.getDoctorById); //get doctor
+router.get(
+  "/get-list-doctor",
+  checkValid("getList"),
+  validate,
+  UserCtrl.getListDoctor
+); // get doctor
 router.put(
   "/edit-doctor/:id",
   passport.authenticate,
@@ -14,6 +20,15 @@ router.put(
   validate,
   UserCtrl.updateDoctorIn4
 ); //update doctor
+// ---------------------user-----------------------------
+router.get(
+  "/get-list-user",
+  passport.authenticate,
+  checkValid("getList"),
+  validate,
+  UserCtrl.getListUser
+); // get user
+router.get("/get-one/:id", UserCtrl.getUserById); //get user
 router.put(
   "/edit-user/:id",
   passport.authenticate,
@@ -23,9 +38,10 @@ router.put(
 ); //update user
 router.put("/change/:id", passport.authenticate, UserCtrl.changePass); //change password
 router.delete("/delete/:id", passport.authenticate, UserCtrl.delete); // delete user
+// ------------------------chung---------------------
 router.post(
   "/create",
-  passport.authenticate,
+  // passport.authenticate,
   checkValid("create"),
   validate,
   UserCtrl.create

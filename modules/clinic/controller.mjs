@@ -3,9 +3,10 @@ import CoreCtrl from "../core.mjs";
 import moment from "moment";
 import mongoose from "mongoose";
 import { isEmpty } from "ramda";
-import { DefaultSvc } from "../../services/index.mjs";
+import { DefaultSvc, ImageDropboxSvc } from "../../services/index.mjs";
 // define constant
 const defaultService = new DefaultSvc();
+const imageDropboxService = new ImageDropboxSvc();
 class Ctrl extends CoreCtrl {
   constructor(model) {
     super(model);
@@ -116,24 +117,39 @@ class Ctrl extends CoreCtrl {
           message: "Không có quyền thao tác",
         };
       }
-      const {
-        name,
-        introduce,
-        strength,
-        equipment,
-        address,
-        process,
-        imageLink,
-      } = req.body;
+      const { name, description, address } = req.body;
+      const image = {
+        id: "",
+        previewUrl: "",
+        path: "",
+      };
+      if (req.files) {
+        //  lấy đường dẫn ảnh
+        const { file } = req.files;
+        if (!file) {
+          return {
+            status: false,
+            message: "Chưa có ảnh tải lên",
+          };
+        }
+        const getImgUrl = await imageDropboxService.getImgUrl(file);
+        if (!getImgUrl.status || !getImgUrl.data) {
+          throw {
+            statusCode: 400,
+            message: getImgUrl.message,
+          };
+        }
+        const { pathLowerImg, idImg, previewUrl } = getImgUrl.data;
+        image.id = idImg;
+        image.previewUrl = previewUrl;
+        image.path = pathLowerImg;
+      }
       const currentTime = moment().unix();
       let result = await super.newCreate({
         name,
+        description,
         address,
-        introduce,
-        strength,
-        equipment,
-        process,
-        imageLink,
+        image,
         updatedTime: currentTime,
         time: currentTime,
         status: defaultService.STATUS_WORKING,
@@ -157,27 +173,42 @@ class Ctrl extends CoreCtrl {
           message: "Không có quyền thao tác",
         };
       }
-      const {
-        name,
-        introduce,
-        strength,
-        equipment,
-        address,
-        process,
-        imageLink,
-      } = req.body;
+      const { name, description, address } = req.body;
       const { id } = req.params;
       const currentTime = moment().unix();
       const formattedId = mongoose.Types.ObjectId(id);
+
+      const image = {
+        id: "",
+        previewUrl: "",
+        path: "",
+      };
+      if (req.files) {
+        //  lấy đường dẫn ảnh
+        const { file } = req.files;
+        if (!file) {
+          return {
+            status: false,
+            message: "Chưa có ảnh tải lên",
+          };
+        }
+        const getImgUrl = await imageDropboxService.getImgUrl(file);
+        if (!getImgUrl.status || !getImgUrl.data) {
+          throw {
+            statusCode: 400,
+            message: getImgUrl.message,
+          };
+        }
+        const { pathLowerImg, idImg, previewUrl } = getImgUrl.data;
+        image.id = idImg;
+        image.previewUrl = previewUrl;
+        image.path = pathLowerImg;
+      }
       let result = await super.update(formattedId, {
         name,
+        description,
         address,
-        introduce,
-        strength,
-        equipment,
-        address,
-        process,
-        imageLink,
+        image,
         updatedTime: currentTime,
       });
       res.locals.resData = {

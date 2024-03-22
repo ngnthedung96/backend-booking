@@ -6,33 +6,24 @@ import AutoIncrement from "mongoose-sequence";
 
 const { Schema } = mongoose;
 
-const ClinicSchema = new Schema(
+const MarkdownSchema = new Schema(
   {
-    name: {
+    doctorId: {
+      type: Schema.Types.ObjectId,
+    },
+    clinicId: {
+      type: Schema.Types.ObjectId,
+    },
+    specialtyId: {
+      type: Schema.Types.ObjectId,
+    },
+    introduce: {
       type: String,
       default: "",
     },
-    description: {
+    content: {
       type: String,
       default: "",
-    },
-    address: {
-      type: String,
-      default: "",
-    },
-    image: {
-      id: {
-        type: String,
-        default: "",
-      },
-      previewUrl: {
-        type: String,
-        default: "",
-      },
-      path: {
-        type: String,
-        default: "",
-      },
     },
     updatedTime: {
       type: Number,
@@ -42,11 +33,11 @@ const ClinicSchema = new Schema(
       type: Number,
       default: 0,
     },
-    orders: {
+    status: {
       type: Number,
       default: 0,
     },
-    status: {
+    orders: {
       type: Number,
       default: 0,
     },
@@ -60,6 +51,6 @@ const ClinicSchema = new Schema(
   }
 );
 
-ClinicSchema.plugin(mongoPagination);
-ClinicSchema.set("toJSON", { getters: true });
-export default mongoConnect.model("clinics", ClinicSchema);
+MarkdownSchema.plugin(mongoPagination);
+MarkdownSchema.set("toJSON", { getters: true });
+export default mongoConnect.model("markdown", MarkdownSchema);
